@@ -1,0 +1,68 @@
+package com.malar.backend.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.malar.backend.entity.Bill;
+import com.malar.backend.entity.Inventory;
+import com.malar.backend.repository.BillRepository;
+import com.malar.backend.repository.InventoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/billing")
+@CrossOrigin(origins = "*")
+public class BillingController {
+
+    @Autowired
+    private BillRepository billRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @PostMapping("/save")
+    public ResponseEntity<?> saveBill(@RequestBody Map<String, Object> request) {
+        try {
+            Bill bill = new Bill();
+            bill.setCustomerName((String) request.getOrDefault("customerName", ""));
+            bill.setPhone((String) request.getOrDefault("phone", ""));
+            bill.setGrandTotal(new BigDecimal(request.get("grandTotal").toString()));
+            
+            // Convert items list to proper JSON string
+            List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
+            bill.setItemsJson(objectMapper.writeValueAsString(items));
+            
+            bill.setCreatedAt(LocalDateTime.now());
+            
+            // Optional: Deduct from inventory if item matches
+            for (Map<String, Object> item : items) {
+                String serviceName = (String) item.get("service");
+                int qty = ((Number) item.get("qty")).intValue();
+                
+                inventoryRepository.findByItemName(serviceName).ifPresent(inv -> {
+                    inv.setStockQuantity(Math.max(0, inv.getStockQuantity() - qty));
+                    inventoryRepository.save(inv);
+                });
+            }
+
+            Bill saved = billRepository.save(bill);
+            return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Bill saved"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<Bill>> getHistory() {
+        return ResponseEntity.ok(billRepository.findAllByOrderByCreatedAtDesc());
+    }
+}
+

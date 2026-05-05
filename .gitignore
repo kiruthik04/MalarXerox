@@ -1,0 +1,49 @@
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Frontend (malar-frontend)
+malar-frontend/node_modules/
+malar-frontend/dist/
+malar-frontend/dist-ssr/
+malar-frontend/*.local
+malar-frontend/.vite/
+malar-frontend/.env
+malar-frontend/.env.*
+!malar-frontend/.env.example
+
+# Backend (malar-backend)
+malar-backend/target/
+malar-backend/build/
+malar-backend/.mvn/
+malar-backend/mvnw
+malar-backend/mvnw.cmd
+malar-backend/*.jar
+malar-backend/*.war
+malar-backend/*.ear
+malar-backend/.project
+malar-backend/.classpath
+malar-backend/.settings/
+malar-backend/bin/
+malar-backend/HELP.md
+malar-backend/src/main/resources/application.properties
+!malar-backend/src/main/resources/application.properties.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
