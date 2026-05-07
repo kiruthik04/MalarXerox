@@ -4,7 +4,8 @@ import {
   Printer, FileText, Smartphone, PenTool, Menu, X, LayoutDashboard,
   TrendingUp, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
   Users, PlusCircle, Zap, Award, ShieldCheck, Receipt, Package,
-  History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera
+  History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera,
+  BookOpen, CreditCard, BookMarked, ScanLine
 } from 'lucide-react';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
@@ -17,8 +18,41 @@ import './index.css';
 const AuthContext = createContext();
 
 const getIcon = (name, size = 18, color = "currentColor") => {
-  const icons = { FileSignature: <FileSignature size={size} color={color} />, Printer: <Printer size={size} color={color} />, Copy: <Copy size={size} color={color} />, Smartphone: <Smartphone size={size} color={color} />, Users: <Users size={size} color={color} /> };
+  const icons = {
+    FileSignature: <FileSignature size={size} color={color} />,
+    Printer: <Printer size={size} color={color} />,
+    Copy: <Copy size={size} color={color} />,
+    Smartphone: <Smartphone size={size} color={color} />,
+    Users: <Users size={size} color={color} />,
+    ShieldCheck: <ShieldCheck size={size} color={color} />,
+    FileText: <FileText size={size} color={color} />,
+  };
   return icons[name] || <FileText size={size} color={color} />;
+};
+
+/* Helper: group services array by their category field */
+const groupByCategory = (services) => {
+  const ORDER = ['Printouts', 'Government E-Services', 'AADHAR Update', 'Ration Card Update', 'Police Services', 'FASTag'];
+  const map = {};
+  services.forEach(s => {
+    const cat = s.category || 'Other';
+    if (!map[cat]) map[cat] = [];
+    map[cat].push(s);
+  });
+  // Return in fixed order, then any extras
+  const ordered = [];
+  ORDER.forEach(c => { if (map[c]) ordered.push({ category: c, items: map[c] }); });
+  Object.keys(map).filter(c => !ORDER.includes(c)).forEach(c => ordered.push({ category: c, items: map[c] }));
+  return ordered;
+};
+
+const CATEGORY_META = {
+  'Printouts':              { accent: '#16a34a', bg: '#f0fdf4', Icon: Printer },
+  'Government E-Services':  { accent: '#1d4ed8', bg: '#eff6ff', Icon: FileSignature },
+  'AADHAR Update':          { accent: '#7c3aed', bg: '#f5f3ff', Icon: CreditCard },
+  'Ration Card Update':     { accent: '#b45309', bg: '#fffbeb', Icon: BookOpen },
+  'Police Services':        { accent: '#dc2626', bg: '#fff1f2', Icon: ShieldCheck },
+  'FASTag':                 { accent: '#0369a1', bg: '#f0f9ff', Icon: CreditCard },
 };
 
 /* ─── Public Navbar ─── */
@@ -40,10 +74,6 @@ const Navbar = () => {
       <div className={`nav-links ${isOpen ? 'open' : ''}`}>
         <Link to="/" className={location.pathname === '/' ? 'active' : ''} onClick={() => setIsOpen(false)}>Storefront</Link>
         <Link to="/services" className={location.pathname === '/services' ? 'active' : ''} onClick={() => setIsOpen(false)}>Services</Link>
-        {auth.token
-          ? <button className="btn-primary" style={{ padding: '0.5rem 1.5rem' }} onClick={() => navigate('/dashboard')}>Dashboard</button>
-          : <button className="btn-primary" style={{ padding: '0.5rem 1.5rem' }} onClick={() => navigate('/login')}>Login</button>
-        }
       </div>
       <button className="mobile-menu-btn" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -282,16 +312,18 @@ const LoginPage = () => {
 const Storefront = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [services, setServices] = useState([]);
-  const [marquee, setMarquee] = useState([]);
+
+  // Static marquee — only the category headings
+  const MARQUEE_LABELS = [
+    'PRINTOUTS', 'GOVERNMENT E-SERVICES', 'AADHAR UPDATE', 'RATION CARD UPDATE', 'POLICE SERVICES', 'FASTAG',
+  ];
+  // Repeat 4× so the scroll never looks empty
+  const marquee = [...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS];
 
   useEffect(() => {
     fetch('http://localhost:8080/api/services')
       .then(res => res.json())
-      .then(data => {
-        setServices(data);
-        const names = data.map(s => s.serviceName.toUpperCase());
-        setMarquee([...names, ...names, ...names]); // repeat for effect
-      })
+      .then(data => setServices(data))
       .catch(err => console.error(err));
   }, []);
 
@@ -325,10 +357,10 @@ const Storefront = () => {
 
       <div className="marquee-container">
         <div className="marquee-content">
-          {marquee.length > 0 ? marquee.map((t, i) => i % 2 === 0
-              ? <span key={i}>{t}</span>
-              : <span key={i} className="star">★</span>
-            ) : null}
+          {marquee.map((t, i) => i % 2 === 0
+            ? <span key={i}>{t}</span>
+            : <span key={i} className="star">★</span>
+          )}
         </div>
       </div>
 
@@ -354,26 +386,44 @@ const Storefront = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Our Professional Services</h2>
-            <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>We offer a wide range of digital and printing solutions to help you grow your business and simplify your tasks.</p>
+            <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>We offer a wide range of digital, printing and government solutions tailored to your needs.</p>
           </div>
-          <div className="services-grid">
-            {services.map((s, idx) => (
-              <div key={s.id || `service-${idx}`} className="glass-card service-item" style={{ textAlign: 'center', transition: 'transform 0.3s' }}>
-                <div className="icon-wrapper" style={{ 
-                  marginBottom: '1.5rem', 
-                  background: 'var(--primary-light)', 
-                  padding: '1.25rem', 
-                  borderRadius: '16px', 
-                  display: 'inline-block',
-                  color: 'var(--primary-dark)'
-                }}>
-                  {getIcon(s.iconName, 32)}
+
+          {groupByCategory(services).map(({ category, items }) => {
+            const meta = CATEGORY_META[category] || { accent: 'var(--primary-dark)', bg: '#f0fdf4', Icon: FileText };
+            const { accent, bg, Icon: CatIcon } = meta;
+            return (
+              <div key={category} style={{ marginBottom: '3.5rem' }}>
+                {/* Category Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', paddingBottom: '0.75rem', borderBottom: `2px solid ${accent}22` }}>
+                  <div style={{ background: bg, border: `1.5px solid ${accent}33`, padding: '0.5rem', borderRadius: '10px', color: accent, display: 'flex' }}>
+                    <CatIcon size={22} />
+                  </div>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: accent, margin: 0 }}>{category}</h3>
+                  <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{items.length} service{items.length !== 1 ? 's' : ''}</span>
                 </div>
-                <h3 style={{ marginBottom: '0.75rem' }}>{s.serviceName}</h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Professional {s.serviceName.toLowerCase()} solutions tailored to your needs.</p>
+
+                {/* Services under this category */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                  {items.map((s, idx) => (
+                    <div key={s.id || `sf-${category}-${idx}`}
+                      className="glass-card service-item"
+                      style={{ textAlign: 'center', padding: '1.25rem 1rem', cursor: 'pointer', borderTop: `3px solid ${accent}` }}
+                      onClick={() => setSelectedService(s)}
+                    >
+                      <div style={{ background: bg, padding: '0.75rem', borderRadius: '12px', display: 'inline-flex', color: accent, marginBottom: '0.75rem' }}>
+                        {getIcon(s.iconName, 22, accent)}
+                      </div>
+                      <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', margin: 0, lineHeight: 1.4 }}>{s.serviceName}</p>
+                      {s.requirements && (
+                        <p style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.4rem', lineHeight: 1.3 }}>Docs required</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
@@ -402,6 +452,17 @@ const Storefront = () => {
               <button className="close-btn" onClick={() => setSelectedService(null)}>&times;</button>
             </div>
             <div className="modal-body">
+              {selectedService.category && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <span className="badge" style={{ background: 'var(--primary-dark)', color: 'white', fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '20px' }}>{selectedService.category}</span>
+                </div>
+              )}
+              {selectedService.requirements && (
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid var(--primary-dark)', fontSize: '0.9rem', color: '#334155' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.4rem', color: '#0f172a' }}>Requirements:</strong>
+                  {selectedService.requirements}
+                </div>
+              )}
               <p>For more info about {selectedService.serviceName}, please contact us via WhatsApp.</p>
               <a href={`https://wa.me/919443933539?text=Hi, I want to inquire about ${selectedService.serviceName}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '1.5rem' }}>
                 Inquire on WhatsApp
@@ -435,24 +496,47 @@ const ServicesPage = () => {
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Top-tier solutions for all your printing and digital needs</p>
         </div>
         
-        <section className="services-grid">
-          {services.map((s, idx) => (
-            <div key={s.id || `svc-${idx}`} className="glass-card service-item" onClick={() => setSelectedService(s)} style={{ textAlign: 'center' }}>
-              <div className="icon-wrapper" style={{ 
-                marginBottom: '1.5rem', 
-                background: 'var(--primary-light)', 
-                padding: '1.5rem', 
-                borderRadius: '20px', 
-                display: 'inline-block' 
-              }}>
-                {getIcon(s.iconName, 40, "var(--primary-dark)")}
+        <div>
+          {groupByCategory(services).map(({ category, items }) => {
+            const meta = CATEGORY_META[category] || { accent: 'var(--primary-dark)', bg: '#f0fdf4', Icon: FileText };
+            const { accent, bg, Icon: CatIcon } = meta;
+            return (
+              <div key={category} style={{ marginBottom: '4rem' }}>
+                {/* Category Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: `2px solid ${accent}33` }}>
+                  <div style={{ background: bg, border: `2px solid ${accent}44`, padding: '0.75rem', borderRadius: '14px', color: accent, display: 'flex' }}>
+                    <CatIcon size={28} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.6rem', fontWeight: 700, color: accent, margin: 0 }}>{category}</h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>{items.length} service{items.length !== 1 ? 's' : ''} available</p>
+                  </div>
+                </div>
+
+                {/* Services under this category */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                  {items.map((s, idx) => (
+                    <div key={s.id || `sp-${category}-${idx}`}
+                      className="glass-card service-item"
+                      onClick={() => setSelectedService(s)}
+                      style={{ textAlign: 'center', padding: '1.5rem 1.25rem', cursor: 'pointer', borderTop: `4px solid ${accent}`, transition: 'transform 0.2s, box-shadow 0.2s' }}
+                    >
+                      <div style={{ background: bg, padding: '1rem', borderRadius: '16px', display: 'inline-flex', color: accent, marginBottom: '1rem' }}>
+                        {getIcon(s.iconName, 28, accent)}
+                      </div>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem', lineHeight: 1.4 }}>{s.serviceName}</h3>
+                      {s.requirements
+                        ? <p style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4, marginBottom: '1rem' }}>Docs required — click to view</p>
+                        : <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '1rem' }}>Click to enquire</p>
+                      }
+                      <div style={{ fontSize: '0.82rem', color: accent, fontWeight: 600 }}>Learn More →</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>{s.serviceName}</h3>
-              <p style={{ color: 'var(--text-muted)' }}>Professional {s.serviceName.toLowerCase()} assistance for individuals and businesses.</p>
-              <div style={{ marginTop: '1.5rem', color: 'var(--primary-dark)', fontWeight: '600', fontSize: '0.9rem' }}>Learn More →</div>
-            </div>
-          ))}
-        </section>
+            );
+          })}
+        </div>
       </div>
       {selectedService && (
         <div className="modal-overlay" onClick={() => setSelectedService(null)}>
@@ -462,6 +546,17 @@ const ServicesPage = () => {
               <button className="close-btn" onClick={() => setSelectedService(null)}>&times;</button>
             </div>
             <div className="modal-body">
+              {selectedService.category && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <span className="badge" style={{ background: 'var(--primary-dark)', color: 'white', fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '20px' }}>{selectedService.category}</span>
+                </div>
+              )}
+              {selectedService.requirements && (
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid var(--primary-dark)', fontSize: '0.9rem', color: '#334155' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.4rem', color: '#0f172a' }}>Requirements:</strong>
+                  {selectedService.requirements}
+                </div>
+              )}
               <p>For more info about {selectedService.serviceName}, please contact us via WhatsApp.</p>
               <a href={`https://wa.me/919443933539?text=Hi, I want to inquire about ${selectedService.serviceName}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '1.5rem' }}>
                 Inquire on WhatsApp

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Trash2, Wallet } from 'lucide-react';
+import { Plus, RefreshCw, Wallet } from 'lucide-react';
 
 export default function ExpensesPage({ token }) {
   const [expenses, setExpenses] = useState([]);
@@ -35,14 +35,6 @@ export default function ExpensesPage({ token }) {
     setTimeout(() => setMsg(''), 3000);
   };
 
-  const remove = async (id) => {
-    if (!window.confirm('Delete this expense?')) return;
-    await fetch(`http://localhost:8080/api/expenses/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    load();
-  };
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -91,22 +83,19 @@ export default function ExpensesPage({ token }) {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Action</th></tr>
+              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>Loading...</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>Loading...</td></tr>
               ) : expenses.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>No expenses recorded yet</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>No expenses recorded yet</td></tr>
               ) : expenses.map(e => (
                 <tr key={e.id}>
                   <td style={{ fontSize: '0.85rem' }}>{new Date(e.createdAt).toLocaleDateString()}</td>
                   <td><span className="badge badge-green" style={{ background: '#f3f4f6', color: '#374151' }}>{e.category}</span></td>
                   <td><strong>{e.description}</strong></td>
                   <td style={{ color: '#ef4444', fontWeight: 700 }}>₹{e.amount.toFixed(2)}</td>
-                  <td>
-                    <button onClick={() => remove(e.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                  </td>
                 </tr>
               ))}
             </tbody>

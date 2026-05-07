@@ -13,6 +13,7 @@ export default function BillingPage({ token }) {
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [customService, setCustomService] = useState('');
   const [lastBill, setLastBill] = useState(null);
 
   React.useEffect(() => {
@@ -21,7 +22,7 @@ export default function BillingPage({ token }) {
       .then(data => {
         const servs = (data.serviceSales || []).map(s => s.serviceName);
         const invs = (data.inventory || []).map(i => i.itemName);
-        const combined = [...servs, ...invs];
+        const combined = [...servs, ...invs, "Others"];
         setAvailableServices(combined);
         if (combined.length > 0) setService(combined[0]);
       })
@@ -29,12 +30,16 @@ export default function BillingPage({ token }) {
   }, []);
 
   const addItem = () => {
-    if (!service || !price || qty < 1) return;
+    const finalService = service === 'Others' ? customService : service;
+    if (!finalService || !price || qty < 1) return;
+    
     setItems(prev => [...prev, {
-      service, qty: Number(qty), price: parseFloat(price),
+      service: finalService, qty: Number(qty), price: parseFloat(price),
       total: Number(qty) * parseFloat(price)
     }]);
+    
     setQty(1); setPrice('');
+    if (service === 'Others') setCustomService('');
   };
 
   const removeItem = (i) => setItems(prev => prev.filter((_, idx) => idx !== i));
@@ -120,6 +125,15 @@ export default function BillingPage({ token }) {
               <select className="form-select" value={service} onChange={e => setService(e.target.value)}>
                 {availableServices.map(s => <option key={s}>{s}</option>)}
               </select>
+              {service === 'Others' && (
+                <input 
+                  className="form-input" 
+                  style={{ marginTop: '0.75rem' }} 
+                  placeholder="Enter manual service name..." 
+                  value={customService} 
+                  onChange={e => setCustomService(e.target.value)} 
+                />
+              )}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">

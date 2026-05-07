@@ -12,6 +12,11 @@ public class ServiceSale {
 
     private String serviceName;
     private String iconName; // e.g. "FileSignature", "Printer"
+    private String category;
+    
+    @Column(length = 1000)
+    private String requirements;
+    
     private int salesToday;
     private BigDecimal revenue;
 
@@ -24,6 +29,12 @@ public class ServiceSale {
 
     public String getIconName() { return iconName; }
     public void setIconName(String iconName) { this.iconName = iconName; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getRequirements() { return requirements; }
+    public void setRequirements(String requirements) { this.requirements = requirements; }
 
     public int getSalesToday() { return salesToday; }
     public void setSalesToday(int salesToday) { this.salesToday = salesToday; }
