@@ -16,10 +16,10 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:bWFsYXJ4ZXJveHN0dWRpb3NhdGh5YW1hbmdhbGFtc2VjcmV0a2V5MjAyNg==}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:86400000}")
     private long expiration;
 
     // Decode Base64 secret into a signing key
