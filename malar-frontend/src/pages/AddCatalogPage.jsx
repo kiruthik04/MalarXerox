@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Package, Cpu } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function AddCatalogPage({ token }) {
   const [tab, setTab] = useState('service');
   const [services, setServices] = useState([]);
@@ -11,13 +13,13 @@ export default function AddCatalogPage({ token }) {
   const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/dashboard/data', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setServices(d.serviceSales || [])).catch(() => {});
   }, []);
 
   const addService = async () => {
     if (!sForm.serviceName) return;
-    const res = await fetch('http://localhost:8080/api/services', {
+    const res = await fetch(`${API_BASE}/api/services`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(sForm),
@@ -28,7 +30,7 @@ export default function AddCatalogPage({ token }) {
 
   const addProduct = async () => {
     if (!iForm.itemName || !iForm.stockQuantity || !iForm.unitPrice) return;
-    const res = await fetch('http://localhost:8080/api/stock', {
+    const res = await fetch(`${API_BASE}/api/stock`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ itemName: iForm.itemName, stockQuantity: Number(iForm.stockQuantity), unitPrice: parseFloat(iForm.unitPrice) }),

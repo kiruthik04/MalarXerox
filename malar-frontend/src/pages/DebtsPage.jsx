@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, CheckCircle, Clock, Trash2, UserX } from 'lucide-react';
 import { generateBillPDF } from '../utils/pdfGenerator';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function DebtsPage({ token }) {
   const [debts, setDebts] = useState([]);
   const [form, setForm] = useState({ customerName: '', phone: '', amount: '', reason: '' });
@@ -10,7 +12,7 @@ export default function DebtsPage({ token }) {
 
   const load = () => {
     setLoading(true);
-    fetch('http://localhost:8080/api/debts', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/debts`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => { setDebts(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -36,7 +38,7 @@ export default function DebtsPage({ token }) {
 
   const settle = async (id) => {
     if (!window.confirm('Mark this debt as paid and generate bill?')) return;
-    const res = await fetch(`http://localhost:8080/api/debts/${id}/settle`, {
+    const res = await fetch(`${API_BASE}/api/debts/${id}/settle`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -65,7 +67,7 @@ export default function DebtsPage({ token }) {
 
   const remove = async (id) => {
     if (!window.confirm('Delete this record?')) return;
-    await fetch(`http://localhost:8080/api/debts/${id}`, {
+    await fetch(`${API_BASE}/api/debts/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });

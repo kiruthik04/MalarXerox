@@ -15,6 +15,8 @@ import ExpensesPage from './pages/ExpensesPage';
 import DebtsPage from './pages/DebtsPage';
 import './index.css';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 const AuthContext = createContext();
 
 const getIcon = (name, size = 18, color = "currentColor") => {
@@ -93,7 +95,7 @@ const AdminLayout = ({ children, pageTitle }) => {
 
   useEffect(() => {
     if (auth.token) {
-      fetch('http://localhost:8080/api/dashboard/data', { headers: { Authorization: `Bearer ${auth.token}` } })
+      fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${auth.token}` } })
         .then(r => r.json())
         .then(d => setStats(d.stats || {}))
         .catch(() => {});
@@ -219,7 +221,7 @@ const OverviewPage = () => {
 
   useEffect(() => {
     if (!auth.token) { navigate('/login'); return; }
-    fetch('http://localhost:8080/api/dashboard/data', { headers: { Authorization: `Bearer ${auth.token}` } })
+    fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${auth.token}` } })
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { 
         setStats(d.stats || {}); 
@@ -344,7 +346,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); setLoading(true); setError('');
     try {
-      const res = await fetch('http://localhost:8080/api/auth/login', {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -398,7 +400,7 @@ const Storefront = () => {
   const marquee = [...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS];
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/services')
+    fetch(`${API_BASE}/api/services`)
       .then(res => res.json())
       .then(data => setServices(data))
       .catch(err => console.error(err));
@@ -558,7 +560,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/services')
+    fetch(`${API_BASE}/api/services`)
       .then(res => res.json())
       .then(data => setServices(data))
       .catch(err => console.error(err));

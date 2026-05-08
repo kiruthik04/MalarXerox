@@ -3,6 +3,8 @@ import { RefreshCw, Eye, FileText, User, Phone, Calendar, IndianRupee, Download 
 import QRCode from 'qrcode';
 import { generateBillPDF } from '../utils/pdfGenerator';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function BillHistoryPage({ token }) {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function BillHistoryPage({ token }) {
 
   const load = () => {
     setLoading(true);
-    fetch('http://localhost:8080/api/billing/history', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/billing/history`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => { setBills(data); setLoading(false); })
       .catch(() => setLoading(false));

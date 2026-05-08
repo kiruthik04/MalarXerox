@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Wallet } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function ExpensesPage({ token }) {
   const [expenses, setExpenses] = useState([]);
   const [form, setForm] = useState({ description: '', amount: '', category: 'Supplies' });
@@ -11,7 +13,7 @@ export default function ExpensesPage({ token }) {
 
   const load = () => {
     setLoading(true);
-    fetch('http://localhost:8080/api/expenses', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/expenses`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => { setExpenses(data); setLoading(false); })
       .catch(() => setLoading(false));

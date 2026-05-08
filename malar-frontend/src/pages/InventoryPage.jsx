@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function InventoryPage({ token }) {
   const [inventory, setInventory] = useState([]);
   const [form, setForm] = useState({ itemName: '', stockQuantity: '', unitPrice: '' });
   const [msg, setMsg] = useState('');
 
   const load = () => {
-    fetch('http://localhost:8080/api/stock', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/stock`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(setInventory).catch(() => {});
   };
 
@@ -28,7 +30,7 @@ export default function InventoryPage({ token }) {
   const restock = async (item) => {
     const qty = prompt(`Enter new stock quantity for "${item.itemName}":`, item.stockQuantity);
     if (!qty) return;
-    await fetch(`http://localhost:8080/api/stock/${item.id}`, {
+    await fetch(`${API_BASE}/api/stock/${item.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ ...item, stockQuantity: Number(qty) }),

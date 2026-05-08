@@ -4,6 +4,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import QRCode from 'qrcode';
 import { generateBillPDF } from '../utils/pdfGenerator';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 export default function BillingPage({ token }) {
 
   const [customerName, setCustomerName] = useState('');
@@ -20,7 +22,7 @@ export default function BillingPage({ token }) {
   const [lastBill, setLastBill] = useState(null);
 
   React.useEffect(() => {
-    fetch('http://localhost:8080/api/dashboard/data')
+    fetch(`${API_BASE}/api/dashboard/data`)
       .then(res => res.json())
       .then(data => {
         const servs = (data.serviceSales || []).map(s => s.serviceName);
@@ -57,7 +59,7 @@ export default function BillingPage({ token }) {
 
     setSaving(true);
     try {
-      const res = await fetch('http://localhost:8080/api/billing/save', {
+      const res = await fetch(`${API_BASE}/api/billing/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ customerName, phone, items, grandTotal, status: paymentStatus }),
