@@ -46,13 +46,23 @@ public class DebtController {
             debt.setSettledAt(LocalDateTime.now());
             debtRepository.save(debt);
 
-            // Create a corresponding Bill record
+            // If this debt is linked to a specific Bill, update that bill's status to PAID
+            if (debt.getBillId() != null) {
+                return billRepository.findById(debt.getBillId()).map(bill -> {
+                    bill.setStatus("PAID");
+                    Bill updated = billRepository.save(bill);
+                    return ResponseEntity.ok(updated);
+                }).orElse(ResponseEntity.notFound().build());
+            }
+
+            // Otherwise, create a NEW Bill record as a "Debt Settlement" entry
             try {
                 Bill bill = new Bill();
                 bill.setCustomerName(debt.getCustomerName());
                 bill.setPhone(debt.getPhone());
                 bill.setGrandTotal(debt.getAmount());
                 bill.setCreatedAt(LocalDateTime.now());
+                bill.setStatus("PAID");
 
                 // Create a single item list for the bill with timing details
                 String addedTime = debt.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));

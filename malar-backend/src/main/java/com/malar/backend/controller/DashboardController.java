@@ -2,13 +2,16 @@ package com.malar.backend.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.malar.backend.entity.Bill;
+import com.malar.backend.entity.Debt;
+import com.malar.backend.entity.Expense;
 import com.malar.backend.entity.Inventory;
 import com.malar.backend.entity.ServiceSale;
-import com.malar.backend.entity.Bill;
 import com.malar.backend.repository.InventoryRepository;
 import com.malar.backend.repository.ServiceSaleRepository;
 import com.malar.backend.repository.BillRepository;
 import com.malar.backend.repository.ExpenseRepository;
+import com.malar.backend.repository.DebtRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,9 @@ public class DashboardController {
     @Autowired
     private ExpenseRepository expenseRepository;
 
+    @Autowired
+    private DebtRepository debtRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping("/data")
@@ -60,6 +66,14 @@ public class DashboardController {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal netProfit = dailyIncome.subtract(dailyExpenses);
+
+        // Previous Day Debt
+        LocalDate yesterday = today.minusDays(1);
+        BigDecimal yesterdayDebt = debtRepository.findAll().stream()
+                .filter(d -> d.getCreatedAt() != null && d.getCreatedAt().toLocalDate().isEqual(yesterday) && !d.isSettled())
+                .map(Debt::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Calculate Service Sales dynamically from today's bills
         Map<String, ServiceSale> serviceSalesMap = new HashMap<>();
@@ -117,6 +131,7 @@ public class DashboardController {
             "dailyIncome", "₹" + String.format("%.2f", dailyIncome),
             "dailyExpenses", "₹" + String.format("%.2f", dailyExpenses),
             "netProfit", "₹" + String.format("%.2f", netProfit),
+            "yesterdayDebt", "₹" + String.format("%.2f", yesterdayDebt),
             "pendingOrders", 0
         ));
 

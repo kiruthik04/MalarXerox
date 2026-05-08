@@ -133,6 +133,18 @@ export function generateBillPDF(billData) {
   doc.text('Thank you for visiting Malar Xerox & Studio! We appreciate your business.', pageWidth / 2, footerY + 6, { align: 'center' });
   doc.text('This is a computer-generated receipt and does not require a signature.', pageWidth / 2, footerY + 11, { align: 'center' });
 
+  // ── QR Code in PDF ──
+  if (billData.qrDataUrl) {
+    const qrSize = 25;
+    const qrX = pageWidth - 14 - qrSize;
+    const qrY = footerY - qrSize - 5;
+    doc.addImage(billData.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...darkGreen);
+    doc.text('SCAN TO PAY', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+  }
+
   // Page number
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);

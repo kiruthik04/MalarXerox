@@ -18,6 +18,7 @@ public class Debt {
     private boolean settled;
     private LocalDateTime createdAt;
     private LocalDateTime settledAt;
+    private Long billId;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -43,4 +44,7 @@ public class Debt {
 
     public LocalDateTime getSettledAt() { return settledAt; }
     public void setSettledAt(LocalDateTime settledAt) { this.settledAt = settledAt; }
+
+    public Long getBillId() { return billId; }
+    public void setBillId(Long billId) { this.billId = billId; }
 }

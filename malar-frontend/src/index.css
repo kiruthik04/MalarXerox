@@ -148,6 +148,12 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 .title {
   font-size: clamp(3.5rem, 8vw, 5.5rem);
   color: var(--text-main);
@@ -797,3 +803,104 @@ th {
 
 .page-header h2 { font-size: 1.6rem; }
 .page-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem; }
+ 
+ /* QR Code Styling */
+ .qr-container {
+   margin-top: 2rem;
+   text-align: center;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.5rem;
+   padding: 1rem;
+   background: #f8fafc;
+   border-radius: 12px;
+   border: 1px dashed #cbd5e1;
+ }
+ 
+ .qr-wrapper {
+   background: white;
+   padding: 0.5rem;
+   border-radius: 8px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+ }
+ 
+ .qr-text {
+   font-size: 0.8rem;
+   font-weight: 600;
+   color: var(--text-muted);
+ }
+ 
+ .bill-header-print {
+   display: none; /* Hidden on screen */
+   text-align: center;
+   margin-bottom: 2rem;
+   border-bottom: 2px solid var(--primary-dark);
+   padding-bottom: 1rem;
+ }
+ 
+ .bill-logo {
+   font-family: 'Outfit', sans-serif;
+   font-size: 1.8rem;
+   font-weight: 800;
+   color: var(--primary-dark);
+ }
+ 
+ .bill-address, .bill-contact {
+   font-size: 0.85rem;
+   color: var(--text-muted);
+ }
+ 
+ /* Print Styles */
+ @media print {
+   @page {
+     margin: 1cm;
+   }
+ 
+   body * {
+     visibility: hidden;
+   }
+ 
+   .printable-bill, .printable-bill * {
+     visibility: visible;
+   }
+ 
+   .printable-bill {
+     position: absolute;
+     left: 0;
+     top: 0;
+     width: 100%;
+     padding: 0 !important;
+     border: none !important;
+     box-shadow: none !important;
+   }
+ 
+   .no-print {
+     display: none !important;
+   }
+ 
+   .bill-header-print {
+     display: block !important;
+   }
+ 
+   .qr-container {
+     margin-top: 3rem;
+     background: transparent;
+     border: none;
+   }
+ 
+   .qr-wrapper {
+     box-shadow: none;
+     border: 1px solid #eee;
+   }
+ 
+   .admin-card {
+     background: transparent !important;
+   }
+ 
+   .bill-items th {
+     background: #f1f5f9 !important;
+     color: black !important;
+     -webkit-print-color-adjust: exact;
+   }
+ }

@@ -5,7 +5,7 @@ import {
   TrendingUp, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
   Users, PlusCircle, Zap, Award, ShieldCheck, Receipt, Package,
   History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera,
-  BookOpen, CreditCard, BookMarked, ScanLine
+  BookOpen, CreditCard, BookMarked, ScanLine, Bell
 } from 'lucide-react';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
@@ -88,6 +88,18 @@ const AdminLayout = ({ children, pageTitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [stats, setStats] = useState({});
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (auth.token) {
+      fetch('http://localhost:8080/api/dashboard/data', { headers: { Authorization: `Bearer ${auth.token}` } })
+        .then(r => r.json())
+        .then(d => setStats(d.stats || {}))
+        .catch(() => {});
+    }
+  }, [auth.token, location.pathname]);
+
   const logout = () => { setAuth({ token: null, username: null }); navigate('/'); };
 
   const navItems = [
@@ -132,10 +144,63 @@ const AdminLayout = ({ children, pageTitle }) => {
       {/* Main area */}
       <div className="admin-main">
         <div className="admin-topbar">
-          <h2>{pageTitle}</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            <Printer size={16} color="var(--primary-dark)" />
-            Malar Xerox & Studio
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h2>{pageTitle}</h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ position: 'relative' }}>
+              <div 
+                style={{ cursor: 'pointer', color: showNotifications ? 'var(--primary-dark)' : 'var(--text-muted)', transition: 'color 0.2s' }}
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={20} />
+                {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
+                  <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
+                )}
+              </div>
+
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setShowNotifications(false)}></div>
+                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.75rem', width: '320px', background: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e7f9ee', zIndex: 999, overflow: 'hidden', animation: 'slideUpFade 0.3s ease-out' }}>
+                    <div style={{ padding: '1rem', borderBottom: '1px solid #f0fdf4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Notifications</h4>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--primary-dark)', fontWeight: 600 }}>{stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? '1 New' : 'No new notifications'}</span>
+                    </div>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? (
+                        <div 
+                          style={{ padding: '1rem', display: 'flex', gap: '0.75rem', background: '#fff5f5', borderBottom: '1px solid #fee2e2', cursor: 'pointer' }}
+                          onClick={() => { navigate('/dashboard/debts'); setShowNotifications(false); }}
+                        >
+                          <div style={{ background: '#fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '8px', height: 'fit-content' }}>
+                            <UserX size={18} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.2rem' }}>Yesterday's Debt Reminder</div>
+                            <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>Total pending: {stats.yesterdayDebt}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '0.4rem', textDecoration: 'underline' }}>View customers →</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                          <Bell size={24} style={{ opacity: 0.2, marginBottom: '0.5rem' }} />
+                          <p style={{ fontSize: '0.85rem', margin: 0 }}>All caught up!</p>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '0.75rem', textAlign: 'center', background: '#f9fffe', borderTop: '1px solid #f0fdf4' }}>
+                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => setShowNotifications(false)}>Close Menu</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                <Printer size={16} color="var(--primary-dark)" />
+                Malar Xerox & Studio
+            </div>
           </div>
         </div>
         <div className="admin-content">{children}</div>
@@ -178,9 +243,21 @@ const OverviewPage = () => {
           <h2>{getGreeting()}, {auth.username || 'Admin'} 👋</h2>
           <p>Here's what's happening at Malar Xerox today.</p>
         </div>
-        <Link to="/dashboard/billing" className="btn-success" style={{ textDecoration: 'none' }}>
-          <PlusCircle size={16} /> New Bill
-        </Link>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+            {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'pulse 2s infinite' }}>
+                    <div style={{ color: '#ef4444' }}><Bell size={18} /></div>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#991b1b' }}>DEBT REMINDER</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ef4444' }}>{stats.yesterdayDebt} from yesterday</div>
+                    </div>
+                    <Link to="/dashboard/debts" style={{ fontSize: '0.8rem', color: '#b91c1c', fontWeight: 600, textDecoration: 'underline' }}>View</Link>
+                </div>
+            )}
+            <Link to="/dashboard/billing" className="btn-success" style={{ textDecoration: 'none' }}>
+                <PlusCircle size={16} /> New Bill
+            </Link>
+        </div>
       </div>
 
       <div className="overview-stats">

@@ -25,6 +25,9 @@ public class BillingController {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private com.malar.backend.repository.DebtRepository debtRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/save")
@@ -34,6 +37,9 @@ public class BillingController {
             bill.setCustomerName((String) request.getOrDefault("customerName", ""));
             bill.setPhone((String) request.getOrDefault("phone", ""));
             bill.setGrandTotal(new BigDecimal(request.get("grandTotal").toString()));
+            
+            String status = (String) request.getOrDefault("status", "PAID");
+            bill.setStatus(status);
             
             // Convert items list to proper JSON string
             List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
@@ -53,6 +59,20 @@ public class BillingController {
             }
 
             Bill saved = billRepository.save(bill);
+
+            // If it's a debt bill, create a record in the debts table
+            if ("DEBT".equalsIgnoreCase(status)) {
+                com.malar.backend.entity.Debt debt = new com.malar.backend.entity.Debt();
+                debt.setCustomerName(bill.getCustomerName());
+                debt.setPhone(bill.getPhone());
+                debt.setAmount(bill.getGrandTotal());
+                debt.setReason("Billing Record #" + saved.getId());
+                debt.setCreatedAt(LocalDateTime.now());
+                debt.setSettled(false);
+                debt.setBillId(saved.getId());
+                debtRepository.save(debt);
+            }
+
             return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Bill saved"));
         } catch (Exception e) {
             e.printStackTrace();

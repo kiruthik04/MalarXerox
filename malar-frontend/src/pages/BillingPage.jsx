@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Printer, Receipt, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import QRCode from 'qrcode';
 import { generateBillPDF } from '../utils/pdfGenerator';
 
 export default function BillingPage({ token }) {
@@ -14,6 +16,7 @@ export default function BillingPage({ token }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [customService, setCustomService] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('PAID');
   const [lastBill, setLastBill] = useState(null);
 
   React.useEffect(() => {
@@ -32,12 +35,12 @@ export default function BillingPage({ token }) {
   const addItem = () => {
     const finalService = service === 'Others' ? customService : service;
     if (!finalService || !price || qty < 1) return;
-    
+
     setItems(prev => [...prev, {
       service: finalService, qty: Number(qty), price: parseFloat(price),
       total: Number(qty) * parseFloat(price)
     }]);
-    
+
     setQty(1); setPrice('');
     if (service === 'Others') setCustomService('');
   };
@@ -47,12 +50,17 @@ export default function BillingPage({ token }) {
 
   const saveBill = async () => {
     if (!items.length) return;
+    if (paymentStatus === 'DEBT' && (!customerName || !phone)) {
+      setMsg('⚠️ Customer Name and Phone are required for Debt bills!');
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch('http://localhost:8080/api/billing/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ customerName, phone, items, grandTotal }),
+        body: JSON.stringify({ customerName, phone, items, grandTotal, status: paymentStatus }),
       });
 
       if (res.ok) {
@@ -62,10 +70,16 @@ export default function BillingPage({ token }) {
           customerName, phone, items, grandTotal,
           createdAt: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
         };
-        setLastBill(billData);
+
+        // Generate QR DataURL for PDF
+        const upiLink = `upi://pay?pa=9865325212-1@okbizaxis&pn=${encodeURIComponent('Malar Xerox')}&am=${grandTotal.toFixed(2)}&cu=INR&mc=0000&mode=02`;
+        const qrDataUrl = await QRCode.toDataURL(upiLink);
+        const billWithQR = { ...billData, qrDataUrl };
+
+        setLastBill(billWithQR);
 
         // Auto-download PDF
-        const doc = generateBillPDF(billData);
+        const doc = generateBillPDF(billWithQR);
         doc.save(`Bill_${String(data.id).padStart(5, '0')}_${customerName || 'Customer'}.pdf`);
 
         setMsg('✅ Bill saved & PDF downloaded!');
@@ -80,7 +94,7 @@ export default function BillingPage({ token }) {
     setTimeout(() => setMsg(''), 4000);
   };
 
-  const downloadLastBill = () => {
+  const downloadLastBill = async () => {
     if (!lastBill) return;
     const doc = generateBillPDF(lastBill);
     doc.save(`Bill_${String(lastBill.billId).padStart(5, '0')}_${lastBill.customerName || 'Customer'}.pdf`);
@@ -116,6 +130,20 @@ export default function BillingPage({ token }) {
               <label>Phone Number</label>
               <input className="form-input" placeholder="Phone (optional)" value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
+
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label style={{ color: 'var(--primary-dark)', fontWeight: 700 }}>Payment Status</label>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid ' + (paymentStatus === 'PAID' ? 'var(--primary-dark)' : '#e2e8f0'), background: paymentStatus === 'PAID' ? '#f0fdf4' : 'transparent' }}>
+                  <input type="radio" name="paymentStatus" value="PAID" checked={paymentStatus === 'PAID'} onChange={() => setPaymentStatus('PAID')} />
+                  <span>Cash</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid ' + (paymentStatus === 'DEBT' ? '#ef4444' : '#e2e8f0'), background: paymentStatus === 'DEBT' ? '#fef2f2' : 'transparent' }}>
+                  <input type="radio" name="paymentStatus" value="DEBT" checked={paymentStatus === 'DEBT'} onChange={() => setPaymentStatus('DEBT')} />
+                  <span style={{ color: paymentStatus === 'DEBT' ? '#b91c1c' : 'inherit' }}>Credit</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="admin-card">
@@ -126,12 +154,12 @@ export default function BillingPage({ token }) {
                 {availableServices.map(s => <option key={s}>{s}</option>)}
               </select>
               {service === 'Others' && (
-                <input 
-                  className="form-input" 
-                  style={{ marginTop: '0.75rem' }} 
-                  placeholder="Enter manual service name..." 
-                  value={customService} 
-                  onChange={e => setCustomService(e.target.value)} 
+                <input
+                  className="form-input"
+                  style={{ marginTop: '0.75rem' }}
+                  placeholder="Enter manual service name..."
+                  value={customService}
+                  onChange={e => setCustomService(e.target.value)}
                 />
               )}
             </div>
@@ -154,8 +182,14 @@ export default function BillingPage({ token }) {
         </div>
 
         {/* ── Right: Bill Summary ── */}
-        <div className="admin-card">
-          <h3><Printer size={18} /> Bill Summary</h3>
+        <div className="admin-card printable-bill">
+          <div className="bill-header-print">
+            <div className="bill-logo">Malar Xerox & Studio</div>
+            <div className="bill-address">Sathy Rd, North Rangasamuthram, Sathyamangalam, TN 638402</div>
+            <div className="bill-contact">Ph: 9865325212 | malarsathy@gmail.com</div>
+          </div>
+
+          <h3 className="no-print"><Printer size={18} /> Bill Summary</h3>
           {items.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
               <Receipt size={40} style={{ marginBottom: '1rem', opacity: 0.3 }} />
@@ -191,14 +225,33 @@ export default function BillingPage({ token }) {
             <span>₹{grandTotal.toFixed(2)}</span>
           </div>
 
-          <button
-            className="btn-success"
-            style={{ width: '100%', marginTop: '1rem', justifyContent: 'center' }}
-            onClick={saveBill}
-            disabled={saving || !items.length}
-          >
-            {saving ? 'Saving...' : <><Download size={16} /> Save Bill & Download PDF</>}
-          </button>
+          {grandTotal > 0 && (
+            <div className="qr-container">
+              <div className="qr-wrapper">
+                <QRCodeSVG
+                  value={`upi://pay?pa=9865325212-1@okbizaxis&pn=${encodeURIComponent('Malar Xerox')}&am=${grandTotal.toFixed(2)}&cu=INR&mc=0000&mode=02`}
+                  size={120}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+              <p className="qr-text">Scan to Pay via GPay / UPI</p>
+            </div>
+          )}
+
+          <div className="no-print">
+            <button
+              className="btn-success"
+              style={{ width: '100%', marginTop: '1rem', justifyContent: 'center' }}
+              onClick={saveBill}
+              disabled={saving || !items.length}
+            >
+              {saving ? 'Saving...' : <><Download size={16} /> Save Bill & Download PDF</>}
+            </button>
+            <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '0.75rem', color: 'var(--text-muted)' }}>
+              Or press <strong>Ctrl + P</strong> to print the bill directly.
+            </p>
+          </div>
         </div>
       </div>
     </div>
