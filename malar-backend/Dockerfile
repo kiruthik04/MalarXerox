@@ -1,8 +1,9 @@
 # Build stage
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
+# Copy the pom and src from the subfolder
+COPY malar-backend/pom.xml .
+COPY malar-backend/src ./src
 RUN mvn clean package -DskipTests
 
 # Run stage
