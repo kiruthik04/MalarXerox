@@ -20,8 +20,6 @@ malar-frontend/.env.*
 malar-backend/target/
 malar-backend/build/
 malar-backend/.mvn/
-malar-backend/mvnw
-malar-backend/mvnw.cmd
 malar-backend/*.jar
 malar-backend/*.war
 malar-backend/*.ear
@@ -30,8 +28,6 @@ malar-backend/.classpath
 malar-backend/.settings/
 malar-backend/bin/
 malar-backend/HELP.md
-malar-backend/src/main/resources/application.properties
-!malar-backend/src/main/resources/application.properties.example
 
 # Logs
 *.log

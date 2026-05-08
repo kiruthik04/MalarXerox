@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:bWFsYXJ4ZXJveHN0dWRpb3NhdGh5YW1hbmdhbGFtc2VjcmV0a2V5MjAyNg==}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}")
