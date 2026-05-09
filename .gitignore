@@ -17,6 +17,7 @@ malar-frontend/.env.*
 !malar-frontend/.env.example
 
 # Backend (malar-backend)
+malar-backend/.env
 malar-backend/target/
 malar-backend/build/
 malar-backend/.mvn/

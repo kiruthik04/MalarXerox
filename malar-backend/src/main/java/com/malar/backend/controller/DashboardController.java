@@ -12,6 +12,7 @@ import com.malar.backend.repository.ServiceSaleRepository;
 import com.malar.backend.repository.BillRepository;
 import com.malar.backend.repository.ExpenseRepository;
 import com.malar.backend.repository.DebtRepository;
+import com.malar.backend.repository.PendingOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,9 @@ public class DashboardController {
 
     @Autowired
     private DebtRepository debtRepository;
+
+    @Autowired
+    private PendingOrderRepository pendingOrderRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -127,12 +131,14 @@ public class DashboardController {
         data.put("serviceSales", dynamicServiceSales);
         data.put("recentBills", allBills.stream().limit(5).collect(Collectors.toList()));
         
+        long pendingOrdersCount = pendingOrderRepository.findByCompletedFalseOrderByCreatedAtDesc().size();
+
         data.put("stats", Map.of(
             "dailyIncome", "₹" + String.format("%.2f", dailyIncome),
             "dailyExpenses", "₹" + String.format("%.2f", dailyExpenses),
             "netProfit", "₹" + String.format("%.2f", netProfit),
             "yesterdayDebt", "₹" + String.format("%.2f", yesterdayDebt),
-            "pendingOrders", 0
+            "pendingOrders", pendingOrdersCount
         ));
 
         return ResponseEntity.ok(data);

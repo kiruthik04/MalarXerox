@@ -13,6 +13,7 @@ import BillHistoryPage from './pages/BillHistoryPage';
 import AddCatalogPage from './pages/AddCatalogPage';
 import ExpensesPage from './pages/ExpensesPage';
 import DebtsPage from './pages/DebtsPage';
+import PendingOrdersPage from './pages/PendingOrdersPage';
 import './index.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -112,6 +113,7 @@ const AdminLayout = ({ children, pageTitle }) => {
     { to: '/dashboard/catalog', label: 'Add Services & Products', icon: <Cpu size={18} /> },
     { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} /> },
     { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} /> },
+    { to: '/dashboard/reminders', label: 'Reminders', icon: <Bell size={18} /> },
   ];
 
   const isActive = (to, exact) => exact ? location.pathname === to : location.pathname === to;
@@ -156,7 +158,7 @@ const AdminLayout = ({ children, pageTitle }) => {
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <Bell size={20} />
-                {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
+                {( (stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00') || (stats.pendingOrders > 0) ) && (
                   <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
                 )}
               </div>
@@ -168,10 +170,12 @@ const AdminLayout = ({ children, pageTitle }) => {
                   <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.75rem', width: '320px', background: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e7f9ee', zIndex: 999, overflow: 'hidden', animation: 'slideUpFade 0.3s ease-out' }}>
                     <div style={{ padding: '1rem', borderBottom: '1px solid #f0fdf4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Notifications</h4>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--primary-dark)', fontWeight: 600 }}>{stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? '1 New' : 'No new notifications'}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--primary-dark)', fontWeight: 600 }}>
+                        { ( (stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? 1 : 0) + (stats.pendingOrders > 0 ? 1 : 0) ) } New
+                      </span>
                     </div>
                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                      {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? (
+                      {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
                         <div 
                           style={{ padding: '1rem', display: 'flex', gap: '0.75rem', background: '#fff5f5', borderBottom: '1px solid #fee2e2', cursor: 'pointer' }}
                           onClick={() => { navigate('/dashboard/debts'); setShowNotifications(false); }}
@@ -185,7 +189,25 @@ const AdminLayout = ({ children, pageTitle }) => {
                             <div style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '0.4rem', textDecoration: 'underline' }}>View customers →</div>
                           </div>
                         </div>
-                      ) : (
+                      )}
+
+                      {stats.pendingOrders > 0 && (
+                        <div 
+                          style={{ padding: '1rem', display: 'flex', gap: '0.75rem', background: '#fffbeb', borderBottom: '1px solid #fef3c7', cursor: 'pointer' }}
+                          onClick={() => { navigate('/dashboard/reminders'); setShowNotifications(false); }}
+                        >
+                          <div style={{ background: '#fef3c7', color: '#d97706', padding: '0.5rem', borderRadius: '8px', height: 'fit-content' }}>
+                            <Clock size={18} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#92400e', marginBottom: '0.2rem' }}>Pending Orders</div>
+                            <div style={{ fontSize: '0.8rem', color: '#d97706', fontWeight: 600 }}>{stats.pendingOrders} tasks to complete</div>
+                            <div style={{ fontSize: '0.7rem', color: '#b45309', marginTop: '0.4rem', textDecoration: 'underline' }}>View reminders →</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {(!stats.yesterdayDebt || stats.yesterdayDebt === '₹0.00') && stats.pendingOrders === 0 && (
                         <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
                           <Bell size={24} style={{ opacity: 0.2, marginBottom: '0.5rem' }} />
                           <p style={{ fontSize: '0.85rem', margin: 0 }}>All caught up!</p>
@@ -655,6 +677,7 @@ const DashboardHistory = () => { const { auth } = useContext(AuthContext); retur
 const DashboardCatalog = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Add Services & Products"><AddCatalogPage token={auth.token} /></AdminLayout>; };
 const DashboardExpenses = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} /></AdminLayout>; };
 const DashboardDebts = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Debt Management"><DebtsPage token={auth.token} /></AdminLayout>; };
+const DashboardReminders = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Pending Orders & Reminders"><PendingOrdersPage token={auth.token} /></AdminLayout>; };
 
 /* ─── App Root ─── */
 function App() {
@@ -693,6 +716,7 @@ function App() {
           <Route path="/dashboard/catalog" element={<DashboardCatalog />} />
           <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
           <Route path="/dashboard/debts" element={<DashboardDebts />} />
+          <Route path="/dashboard/reminders" element={<DashboardReminders />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
