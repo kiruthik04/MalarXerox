@@ -839,7 +839,7 @@ th {
    padding-bottom: 1rem;
  }
  
- .bill-logo {
+ .bill-logo { /* RESPONSIVE_MARKER */
    font-family: 'Outfit', sans-serif;
    font-size: 1.8rem;
    font-weight: 800;
@@ -904,3 +904,153 @@ th {
      -webkit-print-color-adjust: exact;
    }
  }
+
+/* ===== COMPREHENSIVE RESPONSIVE STYLES ===== */
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 240px;
+  }
+  .admin-main {
+    margin-left: 240px;
+  }
+  .billing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Admin Layout Mobile */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  }
+
+  .admin-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .admin-topbar {
+    padding: 1rem;
+  }
+
+  .admin-topbar h2 {
+    font-size: 1.1rem;
+  }
+
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .sidebar-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: var(--primary-dark);
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Dashboard Stats */
+  .overview-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  /* Tables - Scrollable Wrapper */
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 600px; /* Force scroll on narrow screens */
+  }
+
+  /* Overview Grid */
+  .admin-main > .admin-content > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modal responsiveness */
+  .modal-content {
+    padding: 1.5rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Billing specific */
+  .billing-grid {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .hero-content {
+    padding: 0 1rem;
+  }
+
+  .hero {
+    padding: 4rem 1rem;
+  }
+
+  .btn-primary, .btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-content div[style*="display: flex"] {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .services-grid-section {
+    padding: 3rem 1rem !important;
+  }
+  
+  .glass-card {
+    padding: 1.5rem;
+  }
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 199;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay.active {
+    display: block;
+  }
+}

@@ -93,6 +93,7 @@ const AdminLayout = ({ children, pageTitle }) => {
 
   const [stats, setStats] = useState({});
   const [showNotifications, setShowNotifications] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (auth.token) {
@@ -120,8 +121,14 @@ const AdminLayout = ({ children, pageTitle }) => {
 
   return (
     <div className="admin-layout">
+      {/* Sidebar Overlay */}
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`} 
+        onClick={() => setSidebarOpen(false)}
+      ></div>
+
       {/* Sidebar */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <Link to="/" className="sidebar-brand">
           <Printer size={22} /> Malar Xerox
         </Link>
@@ -129,7 +136,11 @@ const AdminLayout = ({ children, pageTitle }) => {
         <ul className="sidebar-nav">
           {navItems.map(item => (
             <li key={item.to}>
-              <Link to={item.to} className={isActive(item.to, item.exact) ? 'active' : ''}>
+              <Link 
+                to={item.to} 
+                className={isActive(item.to, item.exact) ? 'active' : ''}
+                onClick={() => setSidebarOpen(false)}
+              >
                 {item.icon} {item.label}
               </Link>
             </li>
@@ -149,6 +160,13 @@ const AdminLayout = ({ children, pageTitle }) => {
       <div className="admin-main">
         <div className="admin-topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button 
+              className="sidebar-toggle-btn" 
+              style={{ display: 'none' }} 
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={20} />
+            </button>
             <h2>{pageTitle}</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
