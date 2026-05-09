@@ -58,7 +58,7 @@ const groupByCategory = (services) => {
 };
 
 const CATEGORY_META = {
-  'Printouts':              { accent: '#16a34a', bg: '#f0fdf4', Icon: Printer },
+  'Printouts':              { accent: '#155496', bg: '#f0f7ff', Icon: Printer },
   'Government E-Services':  { accent: '#1d4ed8', bg: '#eff6ff', Icon: FileSignature },
   'AADHAR Update':          { accent: '#7c3aed', bg: '#f5f3ff', Icon: CreditCard },
   'Ration Card Update':     { accent: '#b45309', bg: '#fffbeb', Icon: BookOpen },
@@ -194,7 +194,7 @@ const AdminLayout = ({ children, pageTitle }) => {
                 <>
                   <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setShowNotifications(false)}></div>
                   <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.75rem', width: '320px', background: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e7f9ee', zIndex: 999, overflow: 'hidden', animation: 'slideUpFade 0.3s ease-out' }}>
-                    <div style={{ padding: '1rem', borderBottom: '1px solid #f0fdf4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '1rem', borderBottom: '1px solid #f0f7ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Notifications</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--primary-dark)', fontWeight: 600 }}>
                         { ( (stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? 1 : 0) + (stats.pendingOrders > 0 ? 1 : 0) ) } New
@@ -240,7 +240,7 @@ const AdminLayout = ({ children, pageTitle }) => {
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: '0.75rem', textAlign: 'center', background: '#f9fffe', borderTop: '1px solid #f0fdf4' }}>
+                    <div style={{ padding: '0.75rem', textAlign: 'center', background: '#f9fffe', borderTop: '1px solid #f0f7ff' }}>
                       <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => setShowNotifications(false)}>Close Menu</button>
                     </div>
                   </div>
@@ -314,7 +314,7 @@ const OverviewPage = () => {
         {[
           { label: 'Daily Income', value: stats.dailyIncome || '₹0.00', color: 'var(--primary-dark)' },
           { label: 'Daily Expenses', value: stats.dailyExpenses || '₹0.00', color: '#ef4444' },
-          { label: 'Net Profit', value: stats.netProfit || '₹0.00', color: '#16a34a' },
+          { label: 'Net Profit', value: stats.netProfit || '₹0.00', color: '#155496' },
           { label: 'Pending Orders', value: stats.pendingOrders || 0, color: '#f59e0b' },
         ].map(s => (
           <div key={s.label} className="stat-card">
@@ -339,7 +339,7 @@ const OverviewPage = () => {
                   <tr key={s.serviceName}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <div style={{ background: '#f0fdf4', padding: '0.3rem', borderRadius: '6px', color: 'var(--primary-dark)' }}>{getIcon(s.iconName, 16)}</div>
+                        <div style={{ background: '#f0f7ff', padding: '0.3rem', borderRadius: '6px', color: 'var(--primary-dark)' }}>{getIcon(s.iconName, 16)}</div>
                         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{s.serviceName}</span>
                       </div>
                     </td>
@@ -407,7 +407,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f0f7ff, #dbeafe)' }}>
       <div style={{ width: '100%', maxWidth: '420px', padding: '1rem' }}>
         <div className="admin-card" style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '1.5rem' }}>

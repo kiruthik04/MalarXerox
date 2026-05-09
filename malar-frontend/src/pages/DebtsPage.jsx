@@ -83,7 +83,7 @@ export default function DebtsPage({ token }) {
         <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
       </div>
 
-      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: '#dcfce7', color: '#166534', fontWeight: 600 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: '#dbeafe', color: '#1e40af', fontWeight: 600 }}>{msg}</div>}
 
       <div className="responsive-grid">
         <div>
@@ -167,3 +167,4 @@ export default function DebtsPage({ token }) {
     </div>
   );
 }
+

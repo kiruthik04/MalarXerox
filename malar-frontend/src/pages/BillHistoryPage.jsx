@@ -58,7 +58,7 @@ export default function BillHistoryPage({ token }) {
                 <td>
                   <button 
                     onClick={() => setSelectedBill(bill)}
-                    style={{ background: '#f0fdf4', border: '1px solid #d1fae5', color: 'var(--primary-dark)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }}
+                    style={{ background: '#f0f7ff', border: '1px solid #dbeafe', color: 'var(--primary-dark)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }}
                     title="View Summary"
                   >
                     <Eye size={16} />
@@ -76,7 +76,7 @@ export default function BillHistoryPage({ token }) {
           <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ background: '#f0fdf4', color: 'var(--primary-dark)', padding: '0.6rem', borderRadius: '10px' }}>
+                <div style={{ background: '#f0f7ff', color: 'var(--primary-dark)', padding: '0.6rem', borderRadius: '10px' }}>
                   <FileText size={20} />
                 </div>
                 <h3 style={{ margin: 0 }}>Bill Summary <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 400 }}>#{selectedBill.id}</span></h3>
@@ -183,3 +183,4 @@ export default function BillHistoryPage({ token }) {
     </div>
   );
 }
+

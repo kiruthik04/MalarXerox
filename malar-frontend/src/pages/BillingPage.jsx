@@ -114,7 +114,7 @@ export default function BillingPage({ token }) {
       </div>
 
       {msg && (
-        <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', fontWeight: 600, background: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>
+        <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', fontWeight: 600, background: msg.startsWith('✅') ? '#dbeafe' : '#fee2e2', color: msg.startsWith('✅') ? '#1e40af' : '#991b1b' }}>
           {msg}
         </div>
       )}
@@ -136,7 +136,7 @@ export default function BillingPage({ token }) {
             <div className="form-group" style={{ marginTop: '1rem' }}>
               <label style={{ color: 'var(--primary-dark)', fontWeight: 700 }}>Payment Status</label>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid ' + (paymentStatus === 'PAID' ? 'var(--primary-dark)' : '#e2e8f0'), background: paymentStatus === 'PAID' ? '#f0fdf4' : 'transparent' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid ' + (paymentStatus === 'PAID' ? 'var(--primary-dark)' : '#e2e8f0'), background: paymentStatus === 'PAID' ? '#f0f7ff' : 'transparent' }}>
                   <input type="radio" name="paymentStatus" value="PAID" checked={paymentStatus === 'PAID'} onChange={() => setPaymentStatus('PAID')} />
                   <span>Cash</span>
                 </label>
@@ -259,3 +259,4 @@ export default function BillingPage({ token }) {
     </div>
   );
 }
+

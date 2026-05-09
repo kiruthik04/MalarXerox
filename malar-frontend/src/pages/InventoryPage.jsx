@@ -44,7 +44,7 @@ export default function InventoryPage({ token }) {
         <div><h2>Inventory</h2><p>Manage your stock levels</p></div>
         <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
       </div>
-      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: msg.startsWith('✅') ? '#dbeafe' : '#fee2e2', color: msg.startsWith('✅') ? '#1e40af' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
 
       <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
         <h3><Plus size={18} /> Add New Stock Item</h3>
@@ -97,3 +97,4 @@ export default function InventoryPage({ token }) {
     </div>
   );
 }
+

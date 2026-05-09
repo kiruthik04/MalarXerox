@@ -154,7 +154,7 @@ const PendingOrdersPage = ({ token }) => {
         <div style={{ textAlign: 'center', padding: '3rem' }}>Loading reminders...</div>
       ) : orders.length === 0 ? (
         <div className="admin-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <div style={{ background: '#f0fdf4', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--primary-dark)' }}>
+          <div style={{ background: '#f0f7ff', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--primary-dark)' }}>
             <CheckCircle size={32} />
           </div>
           <h3 style={{ marginBottom: '0.5rem' }}>No Pending Orders</h3>
@@ -207,3 +207,4 @@ const PendingOrdersPage = ({ token }) => {
 };
 
 export default PendingOrdersPage;
+

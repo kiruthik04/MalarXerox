@@ -52,7 +52,7 @@ export default function AddCatalogPage({ token }) {
       <div className="page-header">
         <div><h2>Add Services &amp; Products</h2><p>Expand your service catalog and product inventory</p></div>
       </div>
-      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: msg.startsWith('✅') ? '#dbeafe' : '#fee2e2', color: msg.startsWith('✅') ? '#1e40af' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'white', padding: '0.4rem', borderRadius: '10px', width: 'fit-content', border: '1px solid #e7f9ee' }}>
@@ -117,3 +117,4 @@ export default function AddCatalogPage({ token }) {
     </div>
   );
 }
+
