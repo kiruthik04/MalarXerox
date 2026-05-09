@@ -16,6 +16,14 @@ import DebtsPage from './pages/DebtsPage';
 import PendingOrdersPage from './pages/PendingOrdersPage';
 import './index.css';
 
+// Shop Photos
+import shopFront from './assets/shop/shop-front.jpg';
+import signboard from './assets/shop/signboard.jpg';
+import invStaplers from './assets/shop/inventory-staplers.jpg';
+import invCalculators from './assets/shop/inventory-calculators.jpg';
+import invNotebooks from './assets/shop/inventory-notebooks.jpg';
+
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const AuthContext = createContext();
@@ -450,6 +458,7 @@ const Storefront = () => {
     <>
       <section className="hero" id="home">
         <div className="mesh-gradient"></div>
+        <div className="hero-bg-overlay" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${shopFront})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.04, filter: 'grayscale(100%) blur(2px)', zIndex: 0 }}></div>
         
         {/* Floating background elements */}
         <div className="floating-icon" style={{ top: '15%', left: '10%', animationDelay: '0s' }}><Printer size={120} /></div>
@@ -497,6 +506,55 @@ const Storefront = () => {
                   <p style={{ color: 'var(--text-muted)' }}>{desc}</p>
                 </div>
               ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="shop-gallery" style={{ padding: '5rem 2rem', background: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Visit Our Store</h2>
+            <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
+              Experience our premium services and explore our extensive collection of stationery and professional equipment at Sathyamangalam.
+            </p>
+          </div>
+          
+          <div className="gallery-grid">
+            <div className="gallery-item featured">
+              <img src={shopFront} alt="Malar Xerox Front View" />
+              <div className="gallery-overlay">
+                <h4>Main Entrance</h4>
+                <p>Malar Xerox & Studio - Your trusted partner since 1997.</p>
+              </div>
+            </div>
+            <div className="gallery-item">
+              <img src={invNotebooks} alt="Notebooks and Stationery" />
+              <div className="gallery-overlay">
+                <h4>Stationery Collection</h4>
+                <p>Wide variety of notebooks, pens, and school essentials.</p>
+              </div>
+            </div>
+            <div className="gallery-item">
+              <img src={signboard} alt="Malar Xerox Signboard" />
+              <div className="gallery-overlay">
+                <h4>Our Services</h4>
+                <p>Color Xerox, Printouts, Lamination & more.</p>
+              </div>
+            </div>
+            <div className="gallery-item">
+              <img src={invStaplers} alt="Stationery Inventory" />
+              <div className="gallery-overlay">
+                <h4>Office Essentials</h4>
+                <p>High-quality office supplies for your business needs.</p>
+              </div>
+            </div>
+            <div className="gallery-item">
+              <img src={invCalculators} alt="Calculators and Electronics" />
+              <div className="gallery-overlay">
+                <h4>Professional Tools</h4>
+                <p>Quality calculators and professional studio equipment.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
