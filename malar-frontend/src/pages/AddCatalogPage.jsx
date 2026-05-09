@@ -100,7 +100,7 @@ export default function AddCatalogPage({ token }) {
               <label>Item Name</label>
               <input className="form-input" placeholder="e.g. A4 Paper Ream" value={iForm.itemName} onChange={e => setIForm(f => ({ ...f, itemName: e.target.value }))} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="responsive-grid-2">
               <div className="form-group">
                 <label>Initial Quantity</label>
                 <input className="form-input" type="number" min={0} value={iForm.stockQuantity} onChange={e => setIForm(f => ({ ...f, stockQuantity: e.target.value }))} />

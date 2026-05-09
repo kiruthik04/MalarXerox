@@ -165,7 +165,7 @@ export default function BillingPage({ token }) {
                 />
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="responsive-grid-2">
               <div className="form-group">
                 <label>Quantity</label>
                 <input className="form-input" type="number" min={1} value={qty} onChange={e => setQty(e.target.value)} />

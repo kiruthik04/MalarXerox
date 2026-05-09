@@ -48,7 +48,7 @@ export default function InventoryPage({ token }) {
 
       <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
         <h3><Plus size={18} /> Add New Stock Item</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+        <div className="responsive-grid" style={{ alignItems: 'end' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>Item Name</label>
             <input className="form-input" placeholder="e.g. A4 Paper Ream" value={form.itemName} onChange={e => setForm(f => ({ ...f, itemName: e.target.value }))} />

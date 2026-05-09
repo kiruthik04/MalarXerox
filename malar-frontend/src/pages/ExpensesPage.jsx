@@ -49,7 +49,7 @@ export default function ExpensesPage({ token }) {
 
       {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+      <div className="responsive-grid">
         <div>
           <div className="admin-card">
             <h3><Plus size={18} /> New Expense</h3>

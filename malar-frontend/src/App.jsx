@@ -285,7 +285,7 @@ const OverviewPage = () => {
           <h2>{getGreeting()}, {auth.username || 'Admin'} 👋</h2>
           <p>Here's what's happening at Malar Xerox today.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
                 <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'pulse 2s infinite' }}>
                     <div style={{ color: '#ef4444' }}><Bell size={18} /></div>
@@ -316,7 +316,7 @@ const OverviewPage = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
+      <div className="responsive-grid" style={{ marginTop: '1rem' }}>
         <div>
           <div className="page-header" style={{ marginBottom: '1rem' }}>
             <h3 style={{ fontSize: '1.1rem' }}>Today's Service Performance</h3>
@@ -459,7 +459,7 @@ const Storefront = () => {
 
         <div className="hero-content" style={{ maxWidth: '900px' }}>
           <div className="badge" style={{ display: 'inline-block', marginBottom: '1.5rem', background: 'var(--primary-dark)', color: 'white' }}>TRUSTED SINCE 1997</div>
-          <h1 className="title" style={{ fontSize: '4.5rem', lineHeight: '1.1', marginBottom: '2rem' }}>
+          <h1 className="title">
             Malar <br />
             <span className="gradient-text">Xerox & Studio</span>
           </h1>
@@ -467,9 +467,9 @@ const Storefront = () => {
             Premium Photocopying, Studio Photography, and comprehensive Government E-Services. 
             Experience the Malar standard of excellence.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }} onClick={() => document.getElementById('services').scrollIntoView({ behavior: 'smooth' })}>View Our Services</button>
-            <button className="btn-outline" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }} onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}>Contact Us</button>
+          <div className="responsive-grid-2" style={{ maxWidth: '400px', margin: '0 auto' }}>
+            <button className="btn-primary" onClick={() => document.getElementById('services').scrollIntoView({ behavior: 'smooth' })}>View Our Services</button>
+            <button className="btn-outline" onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}>Contact Us</button>
           </div>
         </div>
       </section>

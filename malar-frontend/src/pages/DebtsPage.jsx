@@ -85,7 +85,7 @@ export default function DebtsPage({ token }) {
 
       {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: '#dcfce7', color: '#166534', fontWeight: 600 }}>{msg}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+      <div className="responsive-grid">
         <div>
           <div className="admin-card">
             <h3><Plus size={18} /> Record New Debt</h3>
