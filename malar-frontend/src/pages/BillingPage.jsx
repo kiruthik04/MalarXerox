@@ -11,40 +11,82 @@ export default function BillingPage({ token }) {
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [service, setService] = useState('');
-  const [availableServices, setAvailableServices] = useState([]);
+  const [category, setCategory] = useState('Other');
+  const [catalog, setCatalog] = useState([]); 
+  const [categories, setCategories] = useState(['Other', 'Printouts', 'Government E-Services', 'Stationary']);
   const [qty, setQty] = useState(1);
   const [price, setPrice] = useState('');
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
-  const [customService, setCustomService] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('PAID');
   const [lastBill, setLastBill] = useState(null);
 
   React.useEffect(() => {
-    fetch(`${API_BASE}/api/dashboard/data`)
-      .then(res => res.json())
-      .then(data => {
-        const servs = (data.serviceSales || []).map(s => s.serviceName);
-        const invs = (data.inventory || []).map(i => i.itemName);
-        const combined = [...servs, ...invs, "Others"];
-        setAvailableServices(combined);
-        if (combined.length > 0) setService(combined[0]);
-      })
-      .catch(err => console.error('Failed to load items', err));
-  }, []);
+    const fetchData = async () => {
+      try {
+        const [servicesRes, stockRes] = await Promise.all([
+          fetch(`${API_BASE}/api/services`),
+          fetch(`${API_BASE}/api/stock`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        
+        const services = await servicesRes.json();
+        const stock = await stockRes.json();
+        
+        const combined = [
+          ...services.map(s => ({ name: s.serviceName, category: s.category || 'Other' })),
+          ...stock.map(i => ({ name: i.itemName, category: 'Stationary', price: i.unitPrice }))
+        ];
+        
+        setCatalog(combined);
+        const uniqueCats = ['Other', ...new Set(combined.map(c => c.category).filter(Boolean))];
+        setCategories(uniqueCats);
+      } catch (err) {
+        console.error('Failed to load items', err);
+      }
+    };
+    fetchData();
+  }, [token]);
+
+  const handleNameChange = (val) => {
+    setService(val);
+    
+    if (!val) return;
+
+    // Find all items that start with or contain the current input
+    const matches = catalog.filter(c => c.name.toLowerCase().includes(val.toLowerCase()));
+    
+    if (matches.length > 0) {
+      // If all current matches belong to the same category, auto-select it
+      const firstCat = matches[0].category;
+      const allSameCat = matches.every(m => m.category === firstCat);
+      
+      if (allSameCat) {
+        setCategory(firstCat);
+      } else {
+        // If multiple categories match, but one starts exactly with the input, prioritize it
+        const priorityMatch = matches.find(m => m.name.toLowerCase().startsWith(val.toLowerCase()));
+        if (priorityMatch) setCategory(priorityMatch.category);
+      }
+
+      // If it's an exact match, also set the price
+      const exactMatch = matches.find(m => m.name === val);
+      if (exactMatch && exactMatch.price) setPrice(exactMatch.price);
+    }
+  };
 
   const addItem = () => {
-    const finalService = service === 'Others' ? customService : service;
-    if (!finalService || !price || qty < 1) return;
+    if (!service || !price || qty < 1) return;
 
     setItems(prev => [...prev, {
-      service: finalService, qty: Number(qty), price: parseFloat(price),
+      service: service,
+      category: category,
+      qty: Number(qty),
+      price: parseFloat(price),
       total: Number(qty) * parseFloat(price)
     }]);
 
-    setQty(1); setPrice('');
-    if (service === 'Others') setCustomService('');
+    setService(''); setQty(1); setPrice('');
   };
 
   const removeItem = (i) => setItems(prev => prev.filter((_, idx) => idx !== i));
@@ -152,19 +194,23 @@ export default function BillingPage({ token }) {
           <div className="admin-card">
             <h3><Plus size={18} /> Add Item</h3>
             <div className="form-group">
-              <label>Service / Product</label>
-              <select className="form-select" value={service} onChange={e => setService(e.target.value)}>
-                {availableServices.map(s => <option key={s}>{s}</option>)}
+              <label>Category</label>
+              <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              {service === 'Others' && (
-                <input
-                  className="form-input"
-                  style={{ marginTop: '0.75rem' }}
-                  placeholder="Enter manual service name..."
-                  value={customService}
-                  onChange={e => setCustomService(e.target.value)}
-                />
-              )}
+            </div>
+            <div className="form-group">
+              <label>Service / Product Name</label>
+              <input 
+                className="form-input" 
+                list="catalog-options" 
+                placeholder="Type name to search..." 
+                value={service} 
+                onChange={e => handleNameChange(e.target.value)} 
+              />
+              <datalist id="catalog-options">
+                {catalog.map(item => <option key={item.name} value={item.name} />)}
+              </datalist>
             </div>
             <div className="responsive-grid-2">
               <div className="form-group">

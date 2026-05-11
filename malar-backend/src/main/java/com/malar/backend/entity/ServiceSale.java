@@ -11,7 +11,6 @@ public class ServiceSale {
     private Long id;
 
     private String serviceName;
-    private String iconName; // e.g. "FileSignature", "Printer"
     private String category;
     
     @Column(length = 1000)
@@ -26,9 +25,6 @@ public class ServiceSale {
 
     public String getServiceName() { return serviceName; }
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
-
-    public String getIconName() { return iconName; }
-    public void setIconName(String iconName) { this.iconName = iconName; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

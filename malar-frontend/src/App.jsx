@@ -331,17 +331,14 @@ const OverviewPage = () => {
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Service</th><th>Orders</th><th>Revenue</th></tr></thead>
+              <thead><tr><th>Category</th><th>Orders</th><th>Revenue</th></tr></thead>
               <tbody>
                 {serviceSales.length === 0 ? (
                   <tr><td colSpan={3} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>No sales recorded</td></tr>
                 ) : serviceSales.map(s => (
                   <tr key={s.serviceName}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <div style={{ background: '#f0f7ff', padding: '0.3rem', borderRadius: '6px', color: 'var(--primary-dark)' }}>{getIcon(s.iconName, 16)}</div>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{s.serviceName}</span>
-                      </div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{s.serviceName}</span>
                     </td>
                     <td><span className="badge badge-green" style={{ fontSize: '0.75rem' }}>{s.salesToday}</span></td>
                     <td style={{ fontSize: '0.9rem' }}>₹{s.revenue}</td>

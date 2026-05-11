@@ -31,6 +31,9 @@ public class BillingController {
     @Autowired
     private com.malar.backend.repository.DebtRepository debtRepository;
 
+    @Autowired
+    private com.malar.backend.repository.ServiceSaleRepository serviceSaleRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/save")
@@ -62,15 +65,31 @@ public class BillingController {
             String datePart = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             bill.setDisplayId(String.format("%s-%04d", datePart, nextSeq));
             
-            // Optional: Deduct from inventory if item matches
+            // Optional: Deduct from inventory if item matches, and auto-add new services to catalog
             for (Map<String, Object> item : items) {
                 String serviceName = (String) item.get("service");
+                String category = (String) item.get("category");
                 int qty = ((Number) item.get("qty")).intValue();
                 
+                // Deduct inventory
                 inventoryRepository.findByItemName(serviceName).ifPresent(inv -> {
                     inv.setStockQuantity(Math.max(0, inv.getStockQuantity() - qty));
                     inventoryRepository.save(inv);
                 });
+
+                // Auto-add to catalog if new
+                if (serviceName != null && !serviceName.isEmpty() && 
+                    !serviceName.startsWith("DEBT SETTLEMENT") && 
+                    !serviceSaleRepository.existsByServiceName(serviceName) &&
+                    !inventoryRepository.existsByItemName(serviceName)) {
+                    
+                    com.malar.backend.entity.ServiceSale newService = new com.malar.backend.entity.ServiceSale();
+                    newService.setServiceName(serviceName);
+                    newService.setCategory(category != null ? category : "Other");
+                    newService.setSalesToday(0);
+                    newService.setRevenue(BigDecimal.ZERO);
+                    serviceSaleRepository.save(newService);
+                }
             }
 
             Bill saved = billRepository.save(bill);

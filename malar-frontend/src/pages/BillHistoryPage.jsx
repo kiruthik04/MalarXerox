@@ -9,6 +9,9 @@ export default function BillHistoryPage({ token }) {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBill, setSelectedBill] = useState(null);
+  const [filterText, setFilterText] = useState('');
+  const [searchColumn, setSearchColumn] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
 
   const load = () => {
     setLoading(true);
@@ -20,26 +23,107 @@ export default function BillHistoryPage({ token }) {
 
   useEffect(() => { load(); }, []);
 
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const allPaidBills = bills.filter(b => b.status === 'PAID');
+  
+  const filteredBills = allPaidBills.filter(b => {
+    if (!filterText) return true;
+    const search = filterText.toLowerCase();
+    const id = (b.displayId || b.id.toString()).toLowerCase();
+    
+    if (searchColumn === 'customerName') return (b.customerName?.toLowerCase() || '').includes(search);
+    if (searchColumn === 'phone') return (b.phone?.toLowerCase() || '').includes(search);
+    if (searchColumn === 'displayId') return id.includes(search);
+    
+    return (
+      (b.customerName?.toLowerCase() || '').includes(search) ||
+      (b.phone?.toLowerCase() || '').includes(search) ||
+      (id.includes(search))
+    );
+  });
+
+  const sortedBills = [...filteredBills].sort((a, b) => {
+    if (sortConfig.key === 'createdAt') {
+      return sortConfig.direction === 'asc' 
+        ? new Date(a.createdAt) - new Date(b.createdAt)
+        : new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    if (sortConfig.key === 'grandTotal') {
+      return sortConfig.direction === 'asc' ? a.grandTotal - b.grandTotal : b.grandTotal - a.grandTotal;
+    }
+    if (sortConfig.key === 'customerName') {
+      const nameA = a.customerName || '';
+      const nameB = b.customerName || '';
+      return sortConfig.direction === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    }
+    return 0;
+  });
+
   return (
     <div>
       <div className="page-header">
         <div><h2>Bill History</h2><p>All past billing records</p></div>
-        <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <select 
+                className="form-select" 
+                style={{ width: 'auto', marginBottom: 0, padding: '0.5rem' }}
+                value={searchColumn}
+                onChange={e => setSearchColumn(e.target.value)}
+            >
+                <option value="all">All Columns</option>
+                <option value="customerName">Customer Name</option>
+                <option value="phone">Phone Number</option>
+                <option value="displayId">Bill ID</option>
+            </select>
+            <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Search..." 
+                style={{ width: '200px', marginBottom: 0 }}
+                value={filterText}
+                onChange={e => setFilterText(e.target.value)}
+            />
+            <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        </div>
       </div>
 
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
-            <tr><th>#</th><th>Bill ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Date</th><th>Action</th></tr>
+            <tr>
+                <th>#</th>
+                <th onClick={() => requestSort('displayId')} style={{ cursor: 'pointer' }}>
+                    Bill ID {sortConfig.key === 'displayId' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => requestSort('customerName')} style={{ cursor: 'pointer' }}>
+                    Customer {sortConfig.key === 'customerName' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th>Phone</th>
+                <th>Items</th>
+                <th onClick={() => requestSort('grandTotal')} style={{ cursor: 'pointer' }}>
+                    Total {sortConfig.key === 'grandTotal' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => requestSort('createdAt')} style={{ cursor: 'pointer' }}>
+                    Date {sortConfig.key === 'createdAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th>Action</th>
+            </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading...</td></tr>
-            ) : bills.filter(b => b.status === 'PAID').length === 0 ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No paid bills found.</td></tr>
-            ) : bills.filter(b => b.status === 'PAID').map((bill, i) => (
+            ) : sortedBills.length === 0 ? (
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{filterText ? 'No matching bills found.' : 'No paid bills found.'}</td></tr>
+            ) : sortedBills.map((bill, i) => (
               <tr key={bill.id}>
-                <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{allPaidBills.length - allPaidBills.indexOf(bill)}</td>
                 <td><span className="badge badge-green">#{bill.displayId || bill.id}</span></td>
                 <td><strong>{bill.customerName || '—'}</strong></td>
                 <td>{bill.phone || '—'}</td>

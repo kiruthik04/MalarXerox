@@ -6,7 +6,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 export default function AddCatalogPage({ token }) {
   const [tab, setTab] = useState('service');
   const [services, setServices] = useState([]);
-  const [sForm, setSForm] = useState({ serviceName: '', iconName: 'FileSignature', salesToday: 0, revenue: 0 });
+  const [sForm, setSForm] = useState({ serviceName: '', category: '', salesToday: 0, revenue: 0 });
   const [iForm, setIForm] = useState({ itemName: '', stockQuantity: '', unitPrice: '' });
   const [msg, setMsg] = useState('');
 
@@ -24,7 +24,7 @@ export default function AddCatalogPage({ token }) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(sForm),
     });
-    if (res.ok) { showMsg('✅ Service added!'); setSForm({ serviceName: '', iconName: 'FileSignature', salesToday: 0, revenue: 0 }); }
+    if (res.ok) { showMsg('✅ Service added!'); setSForm({ serviceName: '', category: '', salesToday: 0, revenue: 0 }); }
     else showMsg('❌ Failed.');
   };
 
@@ -69,10 +69,19 @@ export default function AddCatalogPage({ token }) {
               <input className="form-input" placeholder="e.g. Caste Certificate" value={sForm.serviceName} onChange={e => setSForm(f => ({ ...f, serviceName: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Icon Name (for display)</label>
-              <select className="form-select" value={sForm.iconName} onChange={e => setSForm(f => ({ ...f, iconName: e.target.value }))}>
-                {['FileSignature', 'Printer', 'Copy', 'Smartphone', 'Users', 'FileText', 'ShieldCheck'].map(ic => <option key={ic}>{ic}</option>)}
-              </select>
+              <label>Category (e.g. Government E-Services, Printouts)</label>
+              <input 
+                className="form-input" 
+                list="category-suggestions"
+                placeholder="Enter or select category" 
+                value={sForm.category} 
+                onChange={e => setSForm(f => ({ ...f, category: e.target.value }))} 
+              />
+              <datalist id="category-suggestions">
+                {[...new Set(services.map(s => s.serviceName))].map(cat => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
             </div>
             <button className="btn-success" onClick={addService}><Plus size={16} /> Add Service</button>
           </div>
@@ -80,10 +89,10 @@ export default function AddCatalogPage({ token }) {
           {services.length > 0 && (
             <div className="admin-table-wrap" style={{ marginTop: '1.5rem' }}>
               <table className="admin-table">
-                <thead><tr><th>Service</th><th>Icon</th><th>Sales Today</th></tr></thead>
+                <thead><tr><th>Service / Category</th><th>Sales Today</th></tr></thead>
                 <tbody>
                   {services.map(s => (
-                    <tr key={s.serviceName}><td><strong>{s.serviceName}</strong></td><td><span className="badge badge-green">{s.iconName}</span></td><td>{s.salesToday}</td></tr>
+                    <tr key={s.serviceName}><td><strong>{s.serviceName}</strong></td><td>{s.salesToday}</td></tr>
                   ))}
                 </tbody>
               </table>

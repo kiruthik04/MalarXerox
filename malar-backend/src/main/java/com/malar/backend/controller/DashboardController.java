@@ -79,18 +79,27 @@ public class DashboardController {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Calculate Service Sales dynamically from today's bills
-        Map<String, ServiceSale> serviceSalesMap = new HashMap<>();
+        // Calculate Service Sales dynamically from today's bills, grouped by category
+        Map<String, ServiceSale> categorySalesMap = new HashMap<>();
         
-        // Pre-populate with known services from DB to keep icons
-        serviceSaleRepository.findAll().forEach(s -> {
-            ServiceSale ss = new ServiceSale();
-            ss.setServiceName(s.getServiceName());
-            ss.setIconName(s.getIconName());
-            ss.setSalesToday(0);
-            ss.setRevenue(BigDecimal.ZERO);
-            serviceSalesMap.put(s.getServiceName(), ss);
-        });
+        // Load all service definitions to map service names to categories
+        List<ServiceSale> allDefinitions = serviceSaleRepository.findAll();
+        Map<String, String> serviceToCategory = allDefinitions.stream()
+                .collect(Collectors.toMap(ServiceSale::getServiceName, 
+                        s -> (s.getCategory() != null && !s.getCategory().isEmpty()) ? s.getCategory() : "Other",
+                        (a, b) -> a));
+        
+        // Pre-populate with all known categories to show even 0-sale categories
+        allDefinitions.stream()
+                .map(s -> (s.getCategory() != null && !s.getCategory().isEmpty()) ? s.getCategory() : "Other")
+                .distinct()
+                .forEach(cat -> {
+                    ServiceSale ss = new ServiceSale();
+                    ss.setServiceName(cat); // Using serviceName field to hold category name for frontend compatibility
+                    ss.setSalesToday(0);
+                    ss.setRevenue(BigDecimal.ZERO);
+                    categorySalesMap.put(cat, ss);
+                });
 
         for (Bill bill : todayBills) {
             try {
@@ -106,23 +115,27 @@ public class DashboardController {
                     int qty = ((Number) item.get("qty")).intValue();
                     BigDecimal total = new BigDecimal(item.get("total").toString());
 
-                    ServiceSale ss = serviceSalesMap.getOrDefault(name, new ServiceSale());
+                    String category = (String) item.get("category");
+                    if (category == null || category.isEmpty()) {
+                        category = serviceToCategory.getOrDefault(name, "Other");
+                    }
+
+                    ServiceSale ss = categorySalesMap.getOrDefault(category, new ServiceSale());
                     if (ss.getServiceName() == null) {
-                        ss.setServiceName(name);
-                        ss.setIconName("FileText");
+                        ss.setServiceName(category);
                         ss.setRevenue(BigDecimal.ZERO);
                     }
                     ss.setSalesToday(ss.getSalesToday() + qty);
                     ss.setRevenue(ss.getRevenue().add(total));
-                    serviceSalesMap.put(name, ss);
+                    categorySalesMap.put(category, ss);
                 }
             } catch (Exception e) {
                 // Ignore parsing errors for old/invalid data
             }
         }
 
-        List<ServiceSale> dynamicServiceSales = serviceSalesMap.values().stream()
-                .filter(s -> s.getSalesToday() > 0 || serviceSaleRepository.existsByServiceName(s.getServiceName()))
+        List<ServiceSale> dynamicServiceSales = categorySalesMap.values().stream()
+                .filter(s -> s.getSalesToday() > 0 || (s.getServiceName() != null && !s.getServiceName().equals("Other")))
                 .sorted((a, b) -> b.getRevenue().compareTo(a.getRevenue()))
                 .collect(Collectors.toList());
 
