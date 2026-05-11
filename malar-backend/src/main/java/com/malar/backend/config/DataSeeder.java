@@ -60,10 +60,10 @@ public class DataSeeder implements CommandLineRunner {
         return inv;
     }
 
-    private ServiceSale createSale(String name, String icon, int sales, BigDecimal revenue) {
+    private ServiceSale createSale(String name, String category, int sales, BigDecimal revenue) {
         ServiceSale s = new ServiceSale();
         s.setServiceName(name);
-        s.setIconName(icon);
+        s.setCategory(category);
         s.setSalesToday(sales);
         s.setRevenue(revenue);
         return s;

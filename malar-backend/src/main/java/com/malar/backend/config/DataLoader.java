@@ -79,7 +79,6 @@ public class DataLoader implements CommandLineRunner {
             if (!serviceSaleRepository.existsByServiceName(data.serviceName)) {
                 ServiceSale service = new ServiceSale();
                 service.setServiceName(data.serviceName);
-                service.setIconName(data.iconName);
                 service.setCategory(data.category);
                 service.setRequirements(data.requirements);
                 service.setSalesToday(0);
@@ -108,13 +107,11 @@ public class DataLoader implements CommandLineRunner {
 
     private static class ServiceData {
         String serviceName;
-        String iconName;
         String category;
         String requirements;
 
         ServiceData(String serviceName, String iconName, String category, String requirements) {
             this.serviceName = serviceName;
-            this.iconName = iconName;
             this.category = category;
             this.requirements = requirements;
         }

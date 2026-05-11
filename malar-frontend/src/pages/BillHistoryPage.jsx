@@ -13,12 +13,37 @@ export default function BillHistoryPage({ token }) {
   const [searchColumn, setSearchColumn] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
 
-  const load = () => {
+  const load = async () => {
     setLoading(true);
-    fetch(`${API_BASE}/api/billing/history`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => { setBills(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    try {
+      const [billsRes, cashRes] = await Promise.all([
+        fetch(`${API_BASE}/api/billing/history`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/small-income/history`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      const billsData = await billsRes.json();
+      const cashData = await cashRes.json();
+      
+      const unified = [
+        ...billsData.map(b => ({ ...b, isQuickCash: false })),
+        ...cashData.map(c => ({
+          id: 'qc_' + c.id,
+          displayId: 'CASH',
+          customerName: 'Quick Cash',
+          phone: '—',
+          grandTotal: c.amount,
+          createdAt: c.createdAt,
+          itemsJson: '[]',
+          isQuickCash: true
+        }))
+      ];
+      
+      setBills(unified);
+    } catch (err) {
+      console.error('Failed to load history', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -31,7 +56,7 @@ export default function BillHistoryPage({ token }) {
     setSortConfig({ key, direction });
   };
 
-  const allPaidBills = bills.filter(b => b.status === 'PAID');
+  const allPaidBills = bills.filter(b => b.isQuickCash || b.status === 'PAID');
   
   const filteredBills = allPaidBills.filter(b => {
     if (!filterText) return true;
@@ -124,29 +149,45 @@ export default function BillHistoryPage({ token }) {
             ) : sortedBills.map((bill, i) => (
               <tr key={bill.id}>
                 <td style={{ color: 'var(--text-muted)' }}>{allPaidBills.length - allPaidBills.indexOf(bill)}</td>
-                <td><span className="badge badge-green">#{bill.displayId || bill.id}</span></td>
-                <td><strong>{bill.customerName || '—'}</strong></td>
-                <td>{bill.phone || '—'}</td>
                 <td>
-                  {(() => {
-                    try {
-                      const items = JSON.parse(bill.itemsJson || '[]');
-                      return `${items.length} items`;
-                    } catch {
-                      return '—';
-                    }
-                  })()}
+                    <span className={`badge ${bill.isQuickCash ? 'badge-orange' : 'badge-green'}`} style={{ fontSize: '0.75rem' }}>
+                        {bill.isQuickCash ? 'CASH' : `#${bill.displayId || bill.id}`}
+                    </span>
+                </td>
+                <td><strong>{bill.customerName}</strong></td>
+                <td>{bill.phone}</td>
+                <td>
+                  {bill.isQuickCash ? (
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Quick Cash Entry</span>
+                  ) : (
+                      (() => {
+                        try {
+                          const items = JSON.parse(bill.itemsJson || '[]');
+                          return `${items.length} items`;
+                        } catch { return '—'; }
+                      })()
+                  )}
                 </td>
                 <td><strong style={{ color: 'var(--primary-dark)' }}>₹{bill.grandTotal?.toFixed(2) ?? '—'}</strong></td>
                 <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bill.createdAt ? new Date(bill.createdAt).toLocaleString('en-IN') : '—'}</td>
                 <td>
-                  <button 
-                    onClick={() => setSelectedBill(bill)}
-                    style={{ background: '#f0f7ff', border: '1px solid #dbeafe', color: 'var(--primary-dark)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }}
-                    title="View Summary"
-                  >
-                    <Eye size={16} />
-                  </button>
+                  {bill.isQuickCash ? (
+                      <button 
+                        disabled
+                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#94a3b8', padding: '0.4rem', borderRadius: '6px', cursor: 'not-allowed', display: 'flex' }}
+                        title="Bill not available for Quick Cash"
+                      >
+                        <Eye size={16} />
+                      </button>
+                  ) : (
+                      <button 
+                        onClick={() => setSelectedBill(bill)}
+                        style={{ background: '#f0f7ff', border: '1px solid #dbeafe', color: 'var(--primary-dark)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }}
+                        title="View Summary"
+                      >
+                        <Eye size={16} />
+                      </button>
+                  )}
                 </td>
               </tr>
             ))}

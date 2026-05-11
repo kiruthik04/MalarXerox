@@ -5,7 +5,7 @@ import {
   TrendingUp, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
   Users, PlusCircle, Zap, Award, ShieldCheck, Receipt, Package,
   History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera,
-  BookOpen, CreditCard, BookMarked, ScanLine, Bell
+  BookOpen, CreditCard, BookMarked, ScanLine, Bell, Coins
 } from 'lucide-react';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
@@ -14,6 +14,7 @@ import AddCatalogPage from './pages/AddCatalogPage';
 import ExpensesPage from './pages/ExpensesPage';
 import DebtsPage from './pages/DebtsPage';
 import PendingOrdersPage from './pages/PendingOrdersPage';
+import QuickCashPage from './pages/SmallIncomePage';
 import './index.css';
 
 // Shop Photos
@@ -116,12 +117,13 @@ const AdminLayout = ({ children, pageTitle }) => {
 
   const navItems = [
     { to: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={18} />, exact: true },
+    { to: '/dashboard/small-income', label: 'Quick Cash', icon: <Coins size={18} /> },
     { to: '/dashboard/billing', label: 'New Bill', icon: <Receipt size={18} /> },
-    { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} /> },
-    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} /> },
-    { to: '/dashboard/catalog', label: 'Add Services & Products', icon: <Cpu size={18} /> },
     { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} /> },
     { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} /> },
+    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} /> },
+    { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} /> },
+    { to: '/dashboard/catalog', label: 'Add Services and Product', icon: <Cpu size={18} /> },
     { to: '/dashboard/reminders', label: 'Reminders', icon: <Bell size={18} /> },
   ];
 
@@ -751,6 +753,7 @@ const DashboardCatalog = () => { const { auth } = useContext(AuthContext); retur
 const DashboardExpenses = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} /></AdminLayout>; };
 const DashboardDebts = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Debt Management"><DebtsPage token={auth.token} /></AdminLayout>; };
 const DashboardReminders = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Pending Orders & Reminders"><PendingOrdersPage token={auth.token} /></AdminLayout>; };
+const DashboardQuickCash = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} /></AdminLayout>; };
 
 /* ─── App Root ─── */
 function App() {
@@ -790,6 +793,7 @@ function App() {
           <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
           <Route path="/dashboard/debts" element={<DashboardDebts />} />
           <Route path="/dashboard/reminders" element={<DashboardReminders />} />
+          <Route path="/dashboard/small-income" element={<DashboardQuickCash />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
