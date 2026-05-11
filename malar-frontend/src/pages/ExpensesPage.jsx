@@ -24,7 +24,7 @@ export default function ExpensesPage({ token }) {
   const save = async (e) => {
     e.preventDefault();
     if (!form.description || !form.amount) return;
-    const res = await fetch('http://localhost:8080/api/expenses', {
+    const res = await fetch(`${API_BASE}/api/expenses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),

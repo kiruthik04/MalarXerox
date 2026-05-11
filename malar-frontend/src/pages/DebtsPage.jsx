@@ -23,7 +23,7 @@ export default function DebtsPage({ token }) {
   const save = async (e) => {
     e.preventDefault();
     if (!form.customerName || !form.amount) return;
-    const res = await fetch('http://localhost:8080/api/debts', {
+    const res = await fetch(`${API_BASE}/api/debts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),

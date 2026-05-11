@@ -17,7 +17,7 @@ export default function InventoryPage({ token }) {
 
   const save = async () => {
     if (!form.itemName || !form.stockQuantity || !form.unitPrice) return;
-    const res = await fetch('http://localhost:8080/api/stock', {
+    const res = await fetch(`${API_BASE}/api/stock`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ itemName: form.itemName, stockQuantity: Number(form.stockQuantity), unitPrice: parseFloat(form.unitPrice) }),
