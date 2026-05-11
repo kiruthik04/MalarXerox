@@ -40,7 +40,7 @@ export default function BillHistoryPage({ token }) {
             ) : bills.filter(b => b.status === 'PAID').map((bill, i) => (
               <tr key={bill.id}>
                 <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
-                <td><span className="badge badge-green">#{bill.id}</span></td>
+                <td><span className="badge badge-green">#{bill.displayId || bill.id}</span></td>
                 <td><strong>{bill.customerName || '—'}</strong></td>
                 <td>{bill.phone || '—'}</td>
                 <td>
@@ -79,7 +79,7 @@ export default function BillHistoryPage({ token }) {
                 <div style={{ background: '#f0f7ff', color: 'var(--primary-dark)', padding: '0.6rem', borderRadius: '10px' }}>
                   <FileText size={20} />
                 </div>
-                <h3 style={{ margin: 0 }}>Bill Summary <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 400 }}>#{selectedBill.id}</span></h3>
+                <h3 style={{ margin: 0 }}>Bill Summary <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 400 }}>#{selectedBill.displayId || selectedBill.id}</span></h3>
               </div>
               <button className="close-btn" onClick={() => setSelectedBill(null)}>&times;</button>
             </div>
@@ -156,6 +156,7 @@ export default function BillHistoryPage({ token }) {
                     const qrDataUrl = await QRCode.toDataURL(upiLink);
                     const doc = generateBillPDF({
                       billId: selectedBill.id,
+                      displayId: selectedBill.displayId,
                       customerName: selectedBill.customerName,
                       phone: selectedBill.phone,
                       items: selectedBill.itemsJson,
@@ -163,7 +164,7 @@ export default function BillHistoryPage({ token }) {
                       createdAt: selectedBill.createdAt,
                       qrDataUrl
                     });
-                    doc.save(`Bill_${String(selectedBill.id).padStart(5, '0')}_${selectedBill.customerName || 'Customer'}.pdf`);
+                    doc.save(`Bill_${selectedBill.displayId || selectedBill.id}_${selectedBill.customerName || 'Customer'}.pdf`);
                   }}
                 >
                   <Download size={16} /> Download PDF
@@ -183,4 +184,6 @@ export default function BillHistoryPage({ token }) {
     </div>
   );
 }
+
+
 

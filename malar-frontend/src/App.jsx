@@ -249,7 +249,7 @@ const AdminLayout = ({ children, pageTitle }) => {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                 <Printer size={16} color="var(--primary-dark)" />
-                Malar Xerox & Studio
+                Malar Xerox
             </div>
           </div>
         </div>
@@ -413,7 +413,7 @@ const LoginPage = () => {
           <div style={{ marginBottom: '1.5rem' }}>
             <Printer size={40} color="var(--primary-dark)" />
             <h2 style={{ marginTop: '0.75rem', fontSize: '1.8rem' }}>Admin Login</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Malar Xerox & Studio</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Malar Xerox</p>
           </div>
           {error && <div style={{ padding: '0.75rem', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}
           <form onSubmit={handleLogin}>
@@ -470,10 +470,10 @@ const Storefront = () => {
           <div className="badge" style={{ display: 'inline-block', marginBottom: '1.5rem', background: 'var(--primary-dark)', color: 'white' }}>TRUSTED SINCE 1997</div>
           <h1 className="title">
             Malar <br />
-            <span className="gradient-text">Xerox & Studio</span>
+            <span className="gradient-text">Xerox</span>
           </h1>
           <p className="subtitle" style={{ fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto 2.5rem', color: '#4b5563' }}>
-            Premium Photocopying, Studio Photography, and comprehensive Government E-Services. 
+            Premium Photocopying, Printing, and comprehensive Government E-Services. 
             Experience the Malar standard of excellence.
           </p>
           <div className="responsive-grid-2" style={{ maxWidth: '400px', margin: '0 auto' }}>
@@ -524,7 +524,7 @@ const Storefront = () => {
               <img src={shopFront} alt="Malar Xerox Front View" />
               <div className="gallery-overlay">
                 <h4>Main Entrance</h4>
-                <p>Malar Xerox & Studio - Your trusted partner since 1997.</p>
+                <p>Malar Xerox - Your trusted partner since 1997.</p>
               </div>
             </div>
             <div className="gallery-item">
@@ -552,7 +552,7 @@ const Storefront = () => {
               <img src={invCalculators} alt="Calculators and Electronics" />
               <div className="gallery-overlay">
                 <h4>Professional Tools</h4>
-                <p>Quality calculators and professional studio equipment.</p>
+                <p>Quality calculators and professional office equipment.</p>
               </div>
             </div>
           </div>
@@ -800,3 +800,5 @@ function App() {
 }
 
 export default App;
+
+

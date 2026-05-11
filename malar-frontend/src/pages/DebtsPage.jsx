@@ -48,6 +48,7 @@ export default function DebtsPage({ token }) {
       // Auto-generate PDF for the settlement
       const billData = {
         billId: bill.id,
+        displayId: bill.displayId,
         customerName: bill.customerName,
         phone: bill.phone,
         items: JSON.parse(bill.itemsJson),
@@ -56,7 +57,7 @@ export default function DebtsPage({ token }) {
       };
       
       const doc = generateBillPDF(billData);
-      doc.save(`Settlement_${String(bill.id).padStart(5, '0')}_${bill.customerName || 'Customer'}.pdf`);
+      doc.save(`Settlement_${bill.displayId || bill.id}_${bill.customerName || 'Customer'}.pdf`);
       
       setMsg('✅ Debt settled & Bill generated!');
       setTimeout(() => setMsg(''), 4000);
@@ -167,4 +168,6 @@ export default function DebtsPage({ token }) {
     </div>
   );
 }
+
+
 

@@ -75,6 +75,13 @@
       <artifactId>spring-dotenv</artifactId>
       <version>4.0.0</version>
     </dependency>
+
+    <!-- DevTools for Hot Reload -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 
   <build>

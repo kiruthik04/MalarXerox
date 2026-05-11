@@ -69,6 +69,7 @@ export default function BillingPage({ token }) {
         const data = await res.json();
         const billData = {
           billId: data.id,
+          displayId: data.displayId,
           customerName, phone, items, grandTotal,
           createdAt: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
         };
@@ -82,9 +83,9 @@ export default function BillingPage({ token }) {
 
         // Auto-download PDF
         const doc = generateBillPDF(billWithQR);
-        doc.save(`Bill_${String(data.id).padStart(5, '0')}_${customerName || 'Customer'}.pdf`);
+        doc.save(`Bill_${data.displayId || data.id}_${customerName || 'Customer'}.pdf`);
 
-        setMsg('✅ Bill saved & PDF downloaded!');
+        setMsg(`✅ Bill #${data.displayId || data.id} saved & PDF downloaded!`);
         setCustomerName(''); setPhone(''); setItems([]);
       } else {
         setMsg('❌ Failed to save bill.');
@@ -99,7 +100,7 @@ export default function BillingPage({ token }) {
   const downloadLastBill = async () => {
     if (!lastBill) return;
     const doc = generateBillPDF(lastBill);
-    doc.save(`Bill_${String(lastBill.billId).padStart(5, '0')}_${lastBill.customerName || 'Customer'}.pdf`);
+    doc.save(`Bill_${lastBill.displayId || lastBill.billId}_${lastBill.customerName || 'Customer'}.pdf`);
   };
 
   return (
@@ -186,7 +187,7 @@ export default function BillingPage({ token }) {
         {/* ── Right: Bill Summary ── */}
         <div className="admin-card printable-bill">
           <div className="bill-header-print">
-            <div className="bill-logo">Malar Xerox & Studio</div>
+            <div className="bill-logo">Malar Xerox</div>
             <div className="bill-address">Sathy Rd, North Rangasamuthram, Sathyamangalam, TN 638402</div>
             <div className="bill-contact">Ph: 9865325212 | malarsathy@gmail.com</div>
           </div>
@@ -259,4 +260,6 @@ export default function BillingPage({ token }) {
     </div>
   );
 }
+
+
 

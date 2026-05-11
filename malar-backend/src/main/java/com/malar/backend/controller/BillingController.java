@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/billing")
@@ -45,7 +48,19 @@ public class BillingController {
             List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
             bill.setItemsJson(objectMapper.writeValueAsString(items));
             
-            bill.setCreatedAt(LocalDateTime.now());
+            
+            LocalDateTime now = LocalDateTime.now();
+            bill.setCreatedAt(now);
+            
+            // Daily ID logic
+            LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = now.toLocalDate().atTime(LocalTime.MAX);
+            
+            long countToday = billRepository.countByCreatedAtBetween(startOfDay, endOfDay);
+            int nextSeq = (int) countToday + 1;
+            
+            String datePart = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            bill.setDisplayId(String.format("%s-%04d", datePart, nextSeq));
             
             // Optional: Deduct from inventory if item matches
             for (Map<String, Object> item : items) {

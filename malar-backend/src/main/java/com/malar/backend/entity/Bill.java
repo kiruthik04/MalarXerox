@@ -22,6 +22,8 @@ public class Bill {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private String status = "PAID"; // PAID or DEBT
+    
+    private String displayId; // Daily resetting ID like 20240509-001
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +39,6 @@ public class Bill {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getDisplayId() { return displayId; }
+    public void setDisplayId(String displayId) { this.displayId = displayId; }
 }
