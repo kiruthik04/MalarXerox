@@ -107,7 +107,11 @@ public class BillingController {
                 debtRepository.save(debt);
             }
 
-            return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Bill saved"));
+            return ResponseEntity.ok(Map.of(
+                "id", saved.getId(), 
+                "displayId", saved.getDisplayId(),
+                "message", "Bill saved"
+            ));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
