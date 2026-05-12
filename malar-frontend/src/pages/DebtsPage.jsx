@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, CheckCircle, Clock, Trash2, UserX } from 'lucide-react';
+import { Plus, RefreshCw, CheckCircle, Clock, Trash2, UserX, Search } from 'lucide-react';
 import { generateBillPDF } from '../utils/pdfGenerator';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -9,6 +9,7 @@ export default function DebtsPage({ token }) {
   const [form, setForm] = useState({ customerName: '', phone: '', amount: '', reason: '' });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -65,6 +66,40 @@ export default function DebtsPage({ token }) {
     }
   };
 
+  const settleMultiple = async (ids) => {
+    if (!window.confirm(`Mark ${ids.length} debts as paid and generate a combined bill?`)) return;
+    setLoading(true);
+    const res = await fetch(`${API_BASE}/api/debts/settle-multiple`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(ids)
+    });
+    if (res.ok) {
+      const bill = await res.json();
+      
+      const billData = {
+        billId: bill.id,
+        displayId: bill.displayId,
+        customerName: bill.customerName,
+        phone: bill.phone,
+        items: JSON.parse(bill.itemsJson),
+        grandTotal: bill.grandTotal,
+        createdAt: bill.createdAt
+      };
+      
+      const doc = generateBillPDF(billData);
+      doc.save(`Combined_Settlement_${bill.displayId || bill.id}_${bill.customerName || 'Customer'}.pdf`);
+      
+      setMsg('✅ Multiple debts settled & Combined Bill generated!');
+      setTimeout(() => setMsg(''), 4000);
+      load();
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      setMsg(`❌ Failed: ${errorData.error || 'Unknown error'}`);
+      setLoading(false);
+    }
+  };
+
 
   const remove = async (id) => {
     if (!window.confirm('Delete this record?')) return;
@@ -75,13 +110,32 @@ export default function DebtsPage({ token }) {
     load();
   };
 
+  const filteredDebts = debts.filter(d => 
+    d.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (d.phone && d.phone.includes(searchTerm))
+  );
+
   const pendingTotal = debts.filter(d => !d.settled).reduce((sum, d) => sum + d.amount, 0);
+  const filteredPendingDebts = filteredDebts.filter(d => !d.settled);
+  const filteredPendingTotal = filteredPendingDebts.reduce((sum, d) => sum + d.amount, 0);
 
   return (
     <div>
       <div className="page-header">
         <div><h2>Customer Debts</h2><p>Track pending payments and credits</p></div>
-        <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              className="form-input" 
+              placeholder="Filter by customer..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: '32px', width: '250px', marginBottom: 0 }}
+            />
+          </div>
+          <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        </div>
       </div>
 
       {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: '#dbeafe', color: '#1e40af', fontWeight: 600 }}>{msg}</div>}
@@ -119,44 +173,59 @@ export default function DebtsPage({ token }) {
             <div className="stat-title">Total Pending Debts</div>
             <div className="stat-value" style={{ color: '#ef4444' }}>₹{pendingTotal.toFixed(2)}</div>
           </div>
+
+          {searchTerm && filteredPendingDebts.length > 0 && (
+            <div className="stat-card" style={{ marginTop: '1rem', background: '#f0fdf4', border: '1px solid #dcfce7' }}>
+              <div className="stat-title" style={{ color: '#166534' }}>Total for "{searchTerm}"</div>
+              <div className="stat-value" style={{ color: '#15803d' }}>₹{filteredPendingTotal.toFixed(2)}</div>
+              <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: '#166534' }}>{filteredPendingDebts.length} pending records</p>
+              <button 
+                className="btn-success" 
+                style={{ width: '100%', marginTop: '0.75rem' }}
+                onClick={() => settleMultiple(filteredPendingDebts.map(d => d.id))}
+              >
+                <CheckCircle size={14} /> Settle All Filtered
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Customer</th><th>Amount</th><th>Added On</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Customer</th><th className="text-right">Amount</th><th>Added On</th><th>Reason</th><th className="text-center">Status</th><th className="text-center">Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>Loading...</td></tr>
-              ) : debts.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No debt records found</td></tr>
-              ) : debts.map(d => (
+              ) : filteredDebts.length === 0 ? (
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No records found for "{searchTerm}"</td></tr>
+              ) : filteredDebts.map(d => (
                 <tr key={d.id} style={{ opacity: d.settled ? 0.6 : 1 }}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{d.customerName}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{d.phone || 'No phone'}</div>
                   </td>
-                  <td style={{ fontWeight: 700, color: d.settled ? 'var(--text-muted)' : '#ef4444' }}>₹{d.amount.toFixed(2)}</td>
+                  <td className="text-right" style={{ fontWeight: 700, color: d.settled ? 'var(--text-muted)' : '#ef4444' }}>₹{d.amount.toFixed(2)}</td>
                   <td style={{ fontSize: '0.85rem' }}>
                     <div>{new Date(d.createdAt).toLocaleDateString()}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(d.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   </td>
                   <td style={{ fontSize: '0.85rem' }}>{d.reason || '—'}</td>
-                  <td>
+                  <td className="text-center">
                     {d.settled 
-                      ? <span className="badge badge-green"><CheckCircle size={12} style={{ marginRight: '4px' }} /> Paid</span>
-                      : <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={12} style={{ marginRight: '4px' }} /> Pending</span>
+                      ? <span className="badge badge-green"><CheckCircle size={12} /> Paid</span>
+                      : <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={12} /> Pending</span>
                     }
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <td className="text-center">
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', justifyContent: 'center' }}>
                       {!d.settled && (
-                        <button className="btn-success" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }} onClick={() => settle(d.id)}>
+                        <button className="btn-success" style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }} onClick={() => settle(d.id)}>
                           Mark Paid
                         </button>
                       )}
-                      <button onClick={() => remove(d.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                      <button onClick={() => remove(d.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Record"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>

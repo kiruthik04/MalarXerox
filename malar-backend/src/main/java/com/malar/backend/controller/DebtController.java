@@ -9,9 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/debts")
@@ -63,10 +67,11 @@ public class DebtController {
                 bill.setGrandTotal(debt.getAmount());
                 bill.setCreatedAt(LocalDateTime.now());
                 bill.setStatus("PAID");
+                bill.setDisplayId(generateDisplayId(bill.getCreatedAt()));
 
                 // Create a single item list for the bill with timing details
-                String addedTime = debt.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
-                String paidTime = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
+                String addedTime = debt.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
+                String paidTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
                 
                 List<Map<String, Object>> items = List.of(Map.of(
                     "service", "DEBT SETTLEMENT: " + (debt.getReason() != null ? debt.getReason() : "General Credit"),
@@ -83,6 +88,74 @@ public class DebtController {
                 return ResponseEntity.status(500).body(Map.of("error", "Debt settled but failed to create bill record: " + e.getMessage()));
             }
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/settle-multiple")
+    public ResponseEntity<?> settleMultiple(@RequestBody List<Long> ids) {
+        try {
+            List<Debt> debts = debtRepository.findAllById(ids).stream()
+                    .filter(d -> !d.isSettled())
+                    .collect(Collectors.toList());
+            
+            if (debts.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No pending debts found for given IDs"));
+            }
+
+            String customerName = debts.get(0).getCustomerName();
+            String phone = debts.get(0).getPhone();
+            BigDecimal totalAmount = debts.stream()
+                    .map(Debt::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            LocalDateTime now = LocalDateTime.now();
+
+            // Create combined Bill
+            Bill bill = new Bill();
+            bill.setCustomerName(customerName);
+            bill.setPhone(phone);
+            bill.setGrandTotal(totalAmount);
+            bill.setCreatedAt(now);
+            bill.setStatus("PAID");
+            bill.setDisplayId(generateDisplayId(now));
+
+            List<Map<String, Object>> items = debts.stream().map(d -> {
+                String addedTime = d.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+                return Map.of(
+                    "service", "DEBT SETTLEMENT",
+                    "qty", 1,
+                    "price", d.getAmount(),
+                    "total", d.getAmount(),
+                    "note", (d.getReason() != null ? d.getReason() : "Credit") + " (Recorded: " + addedTime + ")"
+                );
+            }).collect(Collectors.toList());
+
+            bill.setItemsJson(objectMapper.writeValueAsString(items));
+            Bill savedBill = billRepository.save(bill);
+
+            // Mark all debts as settled
+            for (Debt d : debts) {
+                d.setSettled(true);
+                d.setSettledAt(now);
+                d.setBillId(savedBill.getId()); // Link to the new bill
+                debtRepository.save(d);
+            }
+
+            return ResponseEntity.ok(savedBill);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to settle multiple debts: " + e.getMessage()));
+        }
+    }
+
+    private String generateDisplayId(LocalDateTime now) {
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = now.toLocalDate().atTime(LocalTime.MAX);
+        
+        long countToday = billRepository.countByCreatedAtBetween(startOfDay, endOfDay);
+        int nextSeq = (int) countToday + 1;
+        
+        String datePart = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return String.format("%s-%04d", datePart, nextSeq);
     }
 
 
