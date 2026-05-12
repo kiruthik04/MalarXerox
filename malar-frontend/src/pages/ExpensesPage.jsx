@@ -8,6 +8,9 @@ export default function ExpensesPage({ token }) {
   const [form, setForm] = useState({ description: '', amount: '', category: 'Supplies' });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [isSupplierPayment, setIsSupplierPayment] = useState(false);
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
 
   const categories = ['Supplies', 'Electricity', 'Rent', 'Internet', 'Salary', 'Maintenance', 'Other'];
 
@@ -17,6 +20,11 @@ export default function ExpensesPage({ token }) {
       .then(r => r.json())
       .then(data => { setExpenses(data); setLoading(false); })
       .catch(() => setLoading(false));
+
+    fetch(`${API_BASE}/api/suppliers`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => setSuppliers(data))
+      .catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
@@ -27,11 +35,17 @@ export default function ExpensesPage({ token }) {
     const res = await fetch(`${API_BASE}/api/expenses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+      body: JSON.stringify({ 
+        ...form, 
+        amount: parseFloat(form.amount),
+        supplier: isSupplierPayment ? { id: selectedSupplierId } : null
+      }),
     });
     if (res.ok) {
       setMsg('✅ Expense recorded!');
       setForm({ description: '', amount: '', category: 'Supplies' });
+      setIsSupplierPayment(false);
+      setSelectedSupplierId('');
       load();
     } else setMsg('❌ Failed to record.');
     setTimeout(() => setMsg(''), 3000);
@@ -67,6 +81,31 @@ export default function ExpensesPage({ token }) {
                 <select className="form-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
                   {categories.map(c => <option key={c}>{c}</option>)}
                 </select>
+              </div>
+
+              <div style={{ marginBottom: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', marginBottom: isSupplierPayment ? '0.75rem' : 0 }}>
+                  <input type="checkbox" style={{ width: '18px', height: '18px' }} checked={isSupplierPayment} onChange={e => setIsSupplierPayment(e.target.checked)} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Is this a payment to a Supplier?</span>
+                </label>
+                
+                {isSupplierPayment && (
+                  <div style={{ animation: 'slideUpFade 0.3s ease-out' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Select Supplier</label>
+                    <select 
+                      className="form-select" 
+                      value={selectedSupplierId} 
+                      onChange={e => setSelectedSupplierId(e.target.value)}
+                      required={isSupplierPayment}
+                    >
+                      <option value="">-- Choose Supplier --</option>
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} (Bal: ₹{s.balance.toFixed(2)})</option>
+                      ))}
+                    </select>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--primary-dark)', marginTop: '0.5rem' }}>Balance will automatically decrease after saving.</p>
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                 <button type="submit" className="btn-success" style={{ padding: '0.6rem 1.5rem' }}>

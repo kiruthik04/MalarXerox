@@ -18,6 +18,9 @@ public class ExpenseController {
     @Autowired
     private ExpenseRepository expenseRepository;
 
+    @Autowired
+    private com.malar.backend.repository.SupplierRepository supplierRepository;
+
     @GetMapping
     public List<Expense> getAll() {
         return expenseRepository.findAllByOrderByCreatedAtDesc();
@@ -26,6 +29,15 @@ public class ExpenseController {
     @PostMapping
     public ResponseEntity<?> add(@RequestBody Expense expense) {
         expense.setCreatedAt(LocalDateTime.now());
+        
+        // If expense is linked to a supplier, reduce supplier balance
+        if (expense.getSupplier() != null && expense.getSupplier().getId() != null) {
+            supplierRepository.findById(expense.getSupplier().getId()).ifPresent(supplier -> {
+                supplier.setBalance(supplier.getBalance().subtract(expense.getAmount()));
+                supplierRepository.save(supplier);
+            });
+        }
+        
         Expense saved = expenseRepository.save(expense);
         return ResponseEntity.ok(saved);
     }

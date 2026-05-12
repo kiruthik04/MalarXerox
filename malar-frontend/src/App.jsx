@@ -15,6 +15,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import DebtsPage from './pages/DebtsPage';
 import PendingOrdersPage from './pages/PendingOrdersPage';
 import QuickCashPage from './pages/SmallIncomePage';
+import SuppliersPage from './pages/SuppliersPage';
 import './index.css';
 
 // Shop Photos
@@ -120,6 +121,7 @@ const AdminLayout = ({ children, pageTitle }) => {
     { to: '/dashboard/small-income', label: 'Quick Cash', icon: <Coins size={18} /> },
     { to: '/dashboard/billing', label: 'New Bill', icon: <Receipt size={18} /> },
     { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} /> },
+    { to: '/dashboard/suppliers', label: 'Suppliers & Balance', icon: <Users size={18} /> },
     { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} /> },
     { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} /> },
     { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} /> },
@@ -754,6 +756,7 @@ const DashboardExpenses = () => { const { auth } = useContext(AuthContext); retu
 const DashboardDebts = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Debt Management"><DebtsPage token={auth.token} /></AdminLayout>; };
 const DashboardReminders = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Pending Orders & Reminders"><PendingOrdersPage token={auth.token} /></AdminLayout>; };
 const DashboardQuickCash = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} /></AdminLayout>; };
+const DashboardSuppliers = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Supplier Records"><SuppliersPage token={auth.token} /></AdminLayout>; };
 
 /* ─── App Root ─── */
 function App() {
@@ -794,6 +797,7 @@ function App() {
           <Route path="/dashboard/debts" element={<DashboardDebts />} />
           <Route path="/dashboard/reminders" element={<DashboardReminders />} />
           <Route path="/dashboard/small-income" element={<DashboardQuickCash />} />
+          <Route path="/dashboard/suppliers" element={<DashboardSuppliers />} />
         </Routes>
       </Router>
     </AuthContext.Provider>

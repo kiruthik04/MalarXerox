@@ -21,6 +21,7 @@ export default function BillingPage({ token }) {
   const [msg, setMsg] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('PAID');
   const [lastBill, setLastBill] = useState(null);
+  const [generateBill, setGenerateBill] = useState(true);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -123,11 +124,14 @@ export default function BillingPage({ token }) {
 
         setLastBill(billWithQR);
 
-        // Auto-download PDF
-        const doc = generateBillPDF(billWithQR);
-        doc.save(`Bill_${data.displayId || data.id}_${customerName || 'Customer'}.pdf`);
-
-        setMsg(`✅ Bill #${data.displayId || data.id} saved & PDF downloaded!`);
+        // Conditional Auto-download PDF
+        if (generateBill) {
+          const doc = generateBillPDF(billWithQR);
+          doc.save(`Bill_${data.displayId || data.id}_${customerName || 'Customer'}.pdf`);
+          setMsg(`✅ Bill #${data.displayId || data.id} saved & PDF downloaded!`);
+        } else {
+          setMsg(`✅ Bill #${data.displayId || data.id} saved successfully!`);
+        }
         setCustomerName(''); setPhone(''); setItems([]);
       } else {
         setMsg('❌ Failed to save bill.');
@@ -289,13 +293,39 @@ export default function BillingPage({ token }) {
           )}
 
           <div className="no-print">
+            {/* Bill Generation Toggle */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: '1rem', 
+              padding: '0.75rem 1rem', 
+              background: '#f8fafc', 
+              borderRadius: '12px', 
+              border: '1px solid #e2e8f0' 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Receipt size={18} style={{ color: 'var(--primary-dark)' }} />
+                <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Generate PDF Receipt?</span>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={generateBill} onChange={e => setGenerateBill(e.target.checked)} />
+                <span className="slider round"></span>
+              </label>
+            </div>
+
             <button
               className="btn-success"
-              style={{ width: '100%', marginTop: '1rem', justifyContent: 'center' }}
+              style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center', height: '48px' }}
               onClick={saveBill}
               disabled={saving || !items.length}
             >
-              {saving ? 'Saving...' : <><Download size={16} /> Save Bill & Download PDF</>}
+              {saving ? 'Saving...' : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {generateBill ? <Download size={18} /> : <Receipt size={18} />}
+                  <span>{generateBill ? 'Save Bill & Download PDF' : 'Save Bill (Database Only)'}</span>
+                </div>
+              )}
             </button>
             <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '0.75rem', color: 'var(--text-muted)' }}>
               Or press <strong>Ctrl + P</strong> to print the bill directly.
