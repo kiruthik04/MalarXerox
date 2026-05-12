@@ -73,13 +73,14 @@ public class DebtController {
                 String addedTime = debt.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
                 String paidTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
                 
-                List<Map<String, Object>> items = List.of(Map.of(
-                    "service", "DEBT SETTLEMENT: " + (debt.getReason() != null ? debt.getReason() : "General Credit"),
-                    "qty", 1,
-                    "price", debt.getAmount(),
-                    "total", debt.getAmount(),
-                    "note", "Debt Recorded: " + addedTime + " | Paid: " + paidTime
-                ));
+                Map<String, Object> singleItem = new java.util.HashMap<>();
+                singleItem.put("service", "DEBT SETTLEMENT: " + (debt.getReason() != null ? debt.getReason() : "General Credit"));
+                singleItem.put("qty", 1);
+                singleItem.put("price", debt.getAmount());
+                singleItem.put("total", debt.getAmount());
+                singleItem.put("note", "Debt Recorded: " + addedTime + " | Paid: " + paidTime);
+                
+                List<Map<String, Object>> items = List.of(singleItem);
                 bill.setItemsJson(objectMapper.writeValueAsString(items));
 
                 Bill savedBill = billRepository.save(bill);
@@ -120,13 +121,13 @@ public class DebtController {
 
             List<Map<String, Object>> items = debts.stream().map(d -> {
                 String addedTime = d.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-                return Map.of(
-                    "service", "DEBT SETTLEMENT",
-                    "qty", 1,
-                    "price", d.getAmount(),
-                    "total", d.getAmount(),
-                    "note", (d.getReason() != null ? d.getReason() : "Credit") + " (Recorded: " + addedTime + ")"
-                );
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("service", "DEBT SETTLEMENT");
+                item.put("qty", 1);
+                item.put("price", d.getAmount());
+                item.put("total", d.getAmount());
+                item.put("note", (d.getReason() != null ? d.getReason() : "Credit") + " (Recorded: " + addedTime + ")");
+                return item;
             }).collect(Collectors.toList());
 
             bill.setItemsJson(objectMapper.writeValueAsString(items));
