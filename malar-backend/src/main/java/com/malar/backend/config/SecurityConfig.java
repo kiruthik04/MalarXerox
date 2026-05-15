@@ -11,6 +11,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,15 +21,22 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            // Permit all API requests — login UI on frontend handles access control
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/login", "/api/services").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/users/**").hasRole("ADMIN")
+                .requestMatchers("/api/suppliers/**").hasRole("ADMIN")
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
-            );
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

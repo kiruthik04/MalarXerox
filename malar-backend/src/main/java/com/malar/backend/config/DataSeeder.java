@@ -29,8 +29,21 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // User credentials should be managed directly in MySQL database by the admin
-        // No hardcoded credentials here.
+        // Seed Users if empty
+        if (userRepository.count() == 0) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole("ADMIN");
+            userRepository.save(admin);
+
+            User employee = new User();
+            employee.setUsername("employee");
+            employee.setPassword(passwordEncoder.encode("emp123"));
+            employee.setRole("EMPLOYEE");
+            userRepository.save(employee);
+            System.out.println("Seeded Default Users: admin/admin123 and employee/emp123");
+        }
 
         // Seed Inventory if empty
         if (inventoryRepository.count() == 0) {

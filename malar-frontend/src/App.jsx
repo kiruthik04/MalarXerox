@@ -5,7 +5,7 @@ import {
   TrendingUp, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
   Users, PlusCircle, Zap, Award, ShieldCheck, Receipt, Package,
   History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera,
-  BookOpen, CreditCard, BookMarked, ScanLine, Bell, Coins
+  BookOpen, CreditCard, BookMarked, ScanLine, Bell, Coins, UserPlus
 } from 'lucide-react';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
@@ -16,6 +16,9 @@ import DebtsPage from './pages/DebtsPage';
 import PendingOrdersPage from './pages/PendingOrdersPage';
 import QuickCashPage from './pages/SmallIncomePage';
 import SuppliersPage from './pages/SuppliersPage';
+import DailyAccountingPage from './pages/DailyAccountingPage';
+import EmployeeManagementPage from './pages/EmployeeManagementPage';
+import { api } from './services/api';
 import './index.css';
 
 // Shop Photos
@@ -26,7 +29,6 @@ import invCalculators from './assets/shop/inventory-calculators.jpg';
 import invNotebooks from './assets/shop/inventory-notebooks.jpg';
 
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const AuthContext = createContext();
 
@@ -107,8 +109,7 @@ const AdminLayout = ({ children, pageTitle }) => {
 
   useEffect(() => {
     if (auth.token) {
-      fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${auth.token}` } })
-        .then(r => r.json())
+      api.getDashboardData()
         .then(d => setStats(d.stats || {}))
         .catch(() => {});
     }
@@ -117,17 +118,22 @@ const AdminLayout = ({ children, pageTitle }) => {
   const logout = () => { setAuth({ token: null, username: null }); navigate('/'); };
 
   const navItems = [
-    { to: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={18} />, exact: true },
-    { to: '/dashboard/small-income', label: 'Quick Cash', icon: <Coins size={18} /> },
-    { to: '/dashboard/billing', label: 'New Bill', icon: <Receipt size={18} /> },
-    { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} /> },
-    { to: '/dashboard/suppliers', label: 'Suppliers & Balance', icon: <Users size={18} /> },
-    { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} /> },
-    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} /> },
-    { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} /> },
-    { to: '/dashboard/catalog', label: 'Add Services and Product', icon: <Cpu size={18} /> },
-    { to: '/dashboard/reminders', label: 'Reminders', icon: <Bell size={18} /> },
+    { to: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={18} />, exact: true, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/small-income', label: 'Quick Cash', icon: <Coins size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/billing', label: 'New Bill', icon: <Receipt size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/suppliers', label: 'Suppliers & Balance', icon: <Users size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/accounting', label: 'Daily Accounting', icon: <TrendingUp size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/catalog', label: 'Add Services and Product', icon: <Cpu size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/reminders', label: 'Reminders', icon: <Bell size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard/employees', label: 'User Management', icon: <UserPlus size={18} />, roles: ['ADMIN'] },
   ];
+
+  const filteredNavItems = navItems.filter(item => item.roles.includes(auth.role || 'ADMIN'));
+
 
   const isActive = (to, exact) => exact ? location.pathname === to : location.pathname === to;
 
@@ -146,7 +152,7 @@ const AdminLayout = ({ children, pageTitle }) => {
         </Link>
         <div className="sidebar-section-label">Main Menu</div>
         <ul className="sidebar-nav">
-          {navItems.map(item => (
+          {filteredNavItems.map(item => (
             <li key={item.to}>
               <Link 
                 to={item.to} 
@@ -273,8 +279,7 @@ const OverviewPage = () => {
 
   useEffect(() => {
     if (!auth.token) { navigate('/login'); return; }
-    fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${auth.token}` } })
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    api.getDashboardData()
       .then(d => { 
         setStats(d.stats || {}); 
         setServiceSales(d.serviceSales || []); 
@@ -395,15 +400,12 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); setLoading(true); setError('');
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (res.ok) { setAuth({ token: data.token, username: data.username }); navigate('/dashboard'); }
-      else setError(data.error || 'Invalid credentials');
-    } catch { setError('Cannot connect to server. Ensure backend is running.'); }
+      const data = await api.login({ username, password });
+      setAuth({ token: data.token, username: data.username, role: data.role }); 
+      navigate('/dashboard');
+    } catch (err) { 
+      setError(err.message || 'Invalid credentials'); 
+    }
     setLoading(false);
   };
 
@@ -449,8 +451,7 @@ const Storefront = () => {
   const marquee = [...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS, ...MARQUEE_LABELS];
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/services`)
-      .then(res => res.json())
+    api.getServices()
       .then(data => setServices(data))
       .catch(err => console.error(err));
   }, []);
@@ -659,8 +660,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/services`)
-      .then(res => res.json())
+    api.getServices()
       .then(data => setServices(data))
       .catch(err => console.error(err));
   }, []);
@@ -748,15 +748,67 @@ const ServicesPage = () => {
 };
 
 /* ─── Protected Dashboard Wrapper ─── */
-const DashboardBilling = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="New Bill"><BillingPage token={auth.token} /></AdminLayout>; };
-const DashboardInventory = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Inventory"><InventoryPage token={auth.token} /></AdminLayout>; };
-const DashboardHistory = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Bill History"><BillHistoryPage token={auth.token} /></AdminLayout>; };
-const DashboardCatalog = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Add Services & Products"><AddCatalogPage token={auth.token} /></AdminLayout>; };
-const DashboardExpenses = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} /></AdminLayout>; };
-const DashboardDebts = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Debt Management"><DebtsPage token={auth.token} /></AdminLayout>; };
-const DashboardReminders = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Pending Orders & Reminders"><PendingOrdersPage token={auth.token} /></AdminLayout>; };
-const DashboardQuickCash = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} /></AdminLayout>; };
-const DashboardSuppliers = () => { const { auth } = useContext(AuthContext); return <AdminLayout pageTitle="Supplier Records"><SuppliersPage token={auth.token} /></AdminLayout>; };
+const DashboardBilling = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  return <AdminLayout pageTitle="New Bill"><BillingPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardInventory = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Inventory"><InventoryPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardHistory = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Bill History"><BillHistoryPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardCatalog = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Add Services & Products"><AddCatalogPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardExpenses = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardDebts = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  return <AdminLayout pageTitle="Debt Management"><DebtsPage token={auth.token} role={auth.role} /></AdminLayout>; 
+};
+const DashboardReminders = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  return <AdminLayout pageTitle="Pending Orders & Reminders"><PendingOrdersPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardQuickCash = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardSuppliers = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Supplier Records"><SuppliersPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardAccounting = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Daily Accounting Summary"><DailyAccountingPage token={auth.token} /></AdminLayout>; 
+};
+const DashboardEmployees = () => { 
+  const { auth } = useContext(AuthContext); 
+  if (!auth.token) return <LoginPage />;
+  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  return <AdminLayout pageTitle="Employee Management"><EmployeeManagementPage token={auth.token} /></AdminLayout>; 
+};
 
 /* ─── App Root ─── */
 function App() {
@@ -764,9 +816,9 @@ function App() {
   const [auth, setAuthState] = useState(() => {
     try {
       const saved = localStorage.getItem('malar_auth');
-      return saved ? JSON.parse(saved) : { token: null, username: null };
+      return saved ? JSON.parse(saved) : { token: null, username: null, role: null };
     } catch {
-      return { token: null, username: null };
+      return { token: null, username: null, role: null };
     }
   });
 
@@ -792,12 +844,14 @@ function App() {
           <Route path="/dashboard/billing" element={<DashboardBilling />} />
           <Route path="/dashboard/inventory" element={<DashboardInventory />} />
           <Route path="/dashboard/history" element={<DashboardHistory />} />
+          <Route path="/dashboard/accounting" element={<DashboardAccounting />} />
           <Route path="/dashboard/catalog" element={<DashboardCatalog />} />
           <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
           <Route path="/dashboard/debts" element={<DashboardDebts />} />
           <Route path="/dashboard/reminders" element={<DashboardReminders />} />
           <Route path="/dashboard/small-income" element={<DashboardQuickCash />} />
           <Route path="/dashboard/suppliers" element={<DashboardSuppliers />} />
+          <Route path="/dashboard/employees" element={<DashboardEmployees />} />
         </Routes>
       </Router>
     </AuthContext.Provider>

@@ -3,10 +3,9 @@ import { Plus, Trash2, Printer, Receipt, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import QRCode from 'qrcode';
 import { generateBillPDF } from '../utils/pdfGenerator';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function BillingPage({ token }) {
+export default function BillingPage() {
 
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -26,13 +25,10 @@ export default function BillingPage({ token }) {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [servicesRes, stockRes] = await Promise.all([
-          fetch(`${API_BASE}/api/services`),
-          fetch(`${API_BASE}/api/stock`, { headers: { Authorization: `Bearer ${token}` } })
+        const [services, stock] = await Promise.all([
+          api.getServices(),
+          api.getInventory()
         ]);
-        
-        const services = await servicesRes.json();
-        const stock = await stockRes.json();
         
         const combined = [
           ...services.map(s => ({ name: s.serviceName, category: s.category || 'Other' })),
@@ -47,7 +43,7 @@ export default function BillingPage({ token }) {
       }
     };
     fetchData();
-  }, [token]);
+  }, []);
 
   const handleNameChange = (val) => {
     setService(val);
@@ -102,40 +98,31 @@ export default function BillingPage({ token }) {
 
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/api/billing/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ customerName, phone, items, grandTotal, status: paymentStatus }),
-      });
+      const data = await api.saveBill({ customerName, phone, items, grandTotal, status: paymentStatus });
 
-      if (res.ok) {
-        const data = await res.json();
-        const billData = {
-          billId: data.id,
-          displayId: data.displayId,
-          customerName, phone, items, grandTotal,
-          createdAt: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        };
+      const billData = {
+        billId: data.id,
+        displayId: data.displayId,
+        customerName, phone, items, grandTotal,
+        createdAt: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      };
 
-        // Generate QR DataURL for PDF
-        const upiLink = `upi://pay?pa=9865325212-1@okbizaxis&pn=${encodeURIComponent('Malar Xerox')}&am=${grandTotal.toFixed(2)}&cu=INR&mc=0000&mode=02`;
-        const qrDataUrl = await QRCode.toDataURL(upiLink);
-        const billWithQR = { ...billData, qrDataUrl };
+      // Generate QR DataURL for PDF
+      const upiLink = `upi://pay?pa=9865325212-1@okbizaxis&pn=${encodeURIComponent('Malar Xerox')}&am=${grandTotal.toFixed(2)}&cu=INR&mc=0000&mode=02`;
+      const qrDataUrl = await QRCode.toDataURL(upiLink);
+      const billWithQR = { ...billData, qrDataUrl };
 
-        setLastBill(billWithQR);
+      setLastBill(billWithQR);
 
-        // Conditional Auto-download PDF
-        if (generateBill) {
-          const doc = generateBillPDF(billWithQR);
-          doc.save(`Bill_${data.displayId || data.id}_${customerName || 'Customer'}.pdf`);
-          setMsg(`✅ Bill #${data.displayId || data.id} saved & PDF downloaded!`);
-        } else {
-          setMsg(`✅ Bill #${data.displayId || data.id} saved successfully!`);
-        }
-        setCustomerName(''); setPhone(''); setItems([]);
+      // Conditional Auto-download PDF
+      if (generateBill) {
+        const doc = generateBillPDF(billWithQR);
+        doc.save(`Bill_${data.displayId || data.id}_${customerName || 'Customer'}.pdf`);
+        setMsg(`✅ Bill #${data.displayId || data.id} saved & PDF downloaded!`);
       } else {
-        setMsg('❌ Failed to save bill.');
+        setMsg(`✅ Bill #${data.displayId || data.id} saved successfully!`);
       }
+      setCustomerName(''); setPhone(''); setItems([]);
     } catch (e) {
       setMsg('❌ Server error: ' + e.message);
     }

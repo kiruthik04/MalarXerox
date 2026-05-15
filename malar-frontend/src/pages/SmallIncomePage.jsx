@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { IndianRupee, Plus, History, Trash2, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { IndianRupee, Plus } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function QuickCashPage({ token }) {
+export default function QuickCashPage() {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -11,23 +10,12 @@ export default function QuickCashPage({ token }) {
     if (!amount || parseFloat(amount) <= 0) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/small-income/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount: parseFloat(amount) })
-      });
-      if (res.ok) {
-        setAmount('');
-        alert('✅ Entry added successfully!');
-      } else {
-        throw new Error('Failed to add entry');
-      }
+      await api.addSmallIncome({ amount: parseFloat(amount) });
+      setAmount('');
+      alert('✅ Entry added successfully!');
     } catch (err) {
       console.error('Quick Cash Add Error:', err);
-      alert('Failed to add amount. Please check your connection.');
+      alert(err.message || 'Failed to add amount.');
     } finally {
       setLoading(false);
     }

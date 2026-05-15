@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Package, Cpu } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function AddCatalogPage({ token }) {
+export default function AddCatalogPage() {
   const [tab, setTab] = useState('service');
   const [services, setServices] = useState([]);
   const [sForm, setSForm] = useState({ serviceName: '', category: '', salesToday: 0, revenue: 0 });
@@ -13,30 +12,29 @@ export default function AddCatalogPage({ token }) {
   const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/dashboard/data`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => setServices(d.serviceSales || [])).catch(() => {});
+    api.getDashboardData().then(d => setServices(d.serviceSales || [])).catch(() => {});
   }, []);
 
   const addService = async () => {
     if (!sForm.serviceName) return;
-    const res = await fetch(`${API_BASE}/api/services`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(sForm),
-    });
-    if (res.ok) { showMsg('✅ Service added!'); setSForm({ serviceName: '', category: '', salesToday: 0, revenue: 0 }); }
-    else showMsg('❌ Failed.');
+    try {
+      await api.addService(sForm);
+      showMsg('✅ Service added!'); 
+      setSForm({ serviceName: '', category: '', salesToday: 0, revenue: 0 });
+    } catch (err) {
+      showMsg(`❌ ${err.message || 'Failed.'}`);
+    }
   };
 
   const addProduct = async () => {
     if (!iForm.itemName || !iForm.stockQuantity || !iForm.unitPrice) return;
-    const res = await fetch(`${API_BASE}/api/stock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ itemName: iForm.itemName, stockQuantity: Number(iForm.stockQuantity), unitPrice: parseFloat(iForm.unitPrice) }),
-    });
-    if (res.ok) { showMsg('✅ Product added!'); setIForm({ itemName: '', stockQuantity: '', unitPrice: '' }); }
-    else showMsg('❌ Failed.');
+    try {
+      await api.addInventoryItem({ itemName: iForm.itemName, stockQuantity: Number(iForm.stockQuantity), unitPrice: parseFloat(iForm.unitPrice) });
+      showMsg('✅ Product added!'); 
+      setIForm({ itemName: '', stockQuantity: '', unitPrice: '' });
+    } catch (err) {
+      showMsg(`❌ ${err.message || 'Failed.'}`);
+    }
   };
 
   const tabStyle = (t) => ({

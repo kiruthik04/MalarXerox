@@ -177,6 +177,63 @@ public class DashboardController {
             return ResponseEntity.status(500).body(err);
         }
     }
+
+    @GetMapping("/historical")
+    public ResponseEntity<?> getHistoricalData() {
+        try {
+            List<Bill> allBills = billRepository.findAll();
+            List<Expense> allExpenses = expenseRepository.findAll();
+            List<com.malar.backend.entity.SmallIncome> allSmallIncomes = smallIncomeRepository.findAll();
+
+            // TreeMap with reverse order to have newest dates first
+            Map<LocalDate, Map<String, BigDecimal>> dayMap = new TreeMap<>(Collections.reverseOrder());
+
+            for (Bill b : allBills) {
+                if (b.getCreatedAt() == null) continue;
+                LocalDate date = b.getCreatedAt().toLocalDate();
+                dayMap.putIfAbsent(date, createDayMap());
+                dayMap.get(date).merge("income", b.getGrandTotal() != null ? b.getGrandTotal() : BigDecimal.ZERO, BigDecimal::add);
+            }
+
+            for (com.malar.backend.entity.SmallIncome si : allSmallIncomes) {
+                if (si.getCreatedAt() == null) continue;
+                LocalDate date = si.getCreatedAt().toLocalDate();
+                dayMap.putIfAbsent(date, createDayMap());
+                dayMap.get(date).merge("income", si.getAmount() != null ? si.getAmount() : BigDecimal.ZERO, BigDecimal::add);
+            }
+
+            for (Expense e : allExpenses) {
+                if (e.getCreatedAt() == null) continue;
+                LocalDate date = e.getCreatedAt().toLocalDate();
+                dayMap.putIfAbsent(date, createDayMap());
+                dayMap.get(date).merge("expense", e.getAmount() != null ? e.getAmount() : BigDecimal.ZERO, BigDecimal::add);
+            }
+
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Map.Entry<LocalDate, Map<String, BigDecimal>> entry : dayMap.entrySet()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("date", entry.getKey().toString());
+                BigDecimal income = entry.getValue().get("income");
+                BigDecimal expense = entry.getValue().get("expense");
+                row.put("income", income);
+                row.put("expense", expense);
+                row.put("netProfit", income.subtract(expense));
+                result.add(row);
+            }
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Historical data load failed: " + e.getMessage()));
+        }
+    }
+
+    private Map<String, BigDecimal> createDayMap() {
+        Map<String, BigDecimal> m = new HashMap<>();
+        m.put("income", BigDecimal.ZERO);
+        m.put("expense", BigDecimal.ZERO);
+        return m;
+    }
 }
 
 

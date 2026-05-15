@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, History, ArrowDownCircle, ArrowUpCircle, Receipt } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function SuppliersPage({ token }) {
+export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
@@ -18,14 +17,8 @@ export default function SuppliersPage({ token }) {
   const loadSuppliers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/suppliers`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setSuppliers(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to load suppliers:', res.status);
-        setSuppliers([]);
-      }
+      const data = await api.getSuppliers();
+      setSuppliers(Array.isArray(data) ? data : []);
     } catch (err) { 
       console.error(err); 
       setSuppliers([]);
@@ -36,8 +29,7 @@ export default function SuppliersPage({ token }) {
   const loadHistory = async (supplier) => {
     setShowHistory(supplier);
     try {
-      const res = await fetch(`${API_BASE}/api/suppliers/${supplier.id}/history`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
+      const data = await api.getSupplierHistory(supplier.id);
       setHistoryData(data);
     } catch (err) { console.error(err); }
   };
@@ -46,33 +38,29 @@ export default function SuppliersPage({ token }) {
 
   const addSupplier = async (e) => {
     e.preventDefault();
-    const res = await fetch(`${API_BASE}/api/suppliers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(supplierForm),
-    });
-    if (res.ok) {
+    try {
+      await api.addSupplier(supplierForm);
       setMsg('✅ Supplier added!');
       setSupplierForm({ name: '', contact: '' });
       setShowAddSupplier(false);
       loadSuppliers();
-    } else setMsg('❌ Failed to add.');
+    } catch (err) {
+      setMsg(`❌ ${err.message || 'Failed to add.'}`);
+    }
     setTimeout(() => setMsg(''), 3000);
   };
 
   const addBill = async (e) => {
     e.preventDefault();
-    const res = await fetch(`${API_BASE}/api/suppliers/${showAddBill.id}/bill`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...billForm, amount: parseFloat(billForm.amount) }),
-    });
-    if (res.ok) {
+    try {
+      await api.addSupplierBill(showAddBill.id, { ...billForm, amount: parseFloat(billForm.amount) });
       setMsg('✅ Bill added to balance!');
       setBillForm({ amount: '', description: '' });
       setShowAddBill(null);
       loadSuppliers();
-    } else setMsg('❌ Failed to add bill.');
+    } catch (err) {
+      setMsg(`❌ ${err.message || 'Failed to add bill.'}`);
+    }
     setTimeout(() => setMsg(''), 3000);
   };
 

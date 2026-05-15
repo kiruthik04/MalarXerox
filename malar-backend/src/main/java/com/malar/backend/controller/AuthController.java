@@ -48,4 +48,31 @@ public class AuthController {
         
         return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
     }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("EMPLOYEE"); // Force EMPLOYEE role for this endpoint
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll().stream().map(user -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", user.getId());
+            map.put("username", user.getUsername());
+            map.put("role", user.getRole());
+            return map;
+        }).toList());
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+    }
 }

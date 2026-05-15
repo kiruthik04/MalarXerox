@@ -1,41 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function InventoryPage({ token }) {
+export default function InventoryPage() {
   const [inventory, setInventory] = useState([]);
   const [form, setForm] = useState({ itemName: '', stockQuantity: '', unitPrice: '' });
   const [msg, setMsg] = useState('');
 
   const load = () => {
-    fetch(`${API_BASE}/api/stock`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setInventory).catch(() => {});
+    api.getInventory().then(setInventory).catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
 
   const save = async () => {
     if (!form.itemName || !form.stockQuantity || !form.unitPrice) return;
-    const res = await fetch(`${API_BASE}/api/stock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ itemName: form.itemName, stockQuantity: Number(form.stockQuantity), unitPrice: parseFloat(form.unitPrice) }),
-    });
-    if (res.ok) { setMsg('✅ Item added!'); setForm({ itemName: '', stockQuantity: '', unitPrice: '' }); load(); }
-    else setMsg('❌ Failed to add item.');
+    try {
+      await api.addInventoryItem({ itemName: form.itemName, stockQuantity: Number(form.stockQuantity), unitPrice: parseFloat(form.unitPrice) });
+      setMsg('✅ Item added!'); 
+      setForm({ itemName: '', stockQuantity: '', unitPrice: '' }); 
+      load();
+    } catch (e) {
+      setMsg(`❌ ${e.message || 'Failed to add item.'}`);
+    }
     setTimeout(() => setMsg(''), 3000);
   };
 
   const restock = async (item) => {
     const qty = prompt(`Enter new stock quantity for "${item.itemName}":`, item.stockQuantity);
     if (!qty) return;
-    await fetch(`${API_BASE}/api/stock/${item.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...item, stockQuantity: Number(qty) }),
-    });
-    load();
+    try {
+      await api.updateInventoryItem(item.id, { ...item, stockQuantity: Number(qty) });
+      load();
+    } catch (e) {
+      alert(`Failed to restock: ${e.message}`);
+    }
   };
 
   return (

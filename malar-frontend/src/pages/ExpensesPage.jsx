@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Wallet } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function ExpensesPage({ token }) {
+export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [form, setForm] = useState({ description: '', amount: '', category: 'Supplies' });
   const [msg, setMsg] = useState('');
@@ -16,15 +15,10 @@ export default function ExpensesPage({ token }) {
 
   const load = () => {
     setLoading(true);
-    fetch(`${API_BASE}/api/expenses`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => { setExpenses(data); setLoading(false); })
-      .catch(() => setLoading(false));
-
-    fetch(`${API_BASE}/api/suppliers`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => setSuppliers(data))
-      .catch(() => {});
+    Promise.all([
+      api.getExpenses().then(setExpenses).catch(() => {}),
+      api.getSuppliers().then(setSuppliers).catch(() => {})
+    ]).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -32,22 +26,20 @@ export default function ExpensesPage({ token }) {
   const save = async (e) => {
     e.preventDefault();
     if (!form.description || !form.amount) return;
-    const res = await fetch(`${API_BASE}/api/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ 
+    try {
+      await api.addExpense({
         ...form, 
         amount: parseFloat(form.amount),
         supplier: isSupplierPayment ? { id: selectedSupplierId } : null
-      }),
-    });
-    if (res.ok) {
+      });
       setMsg('✅ Expense recorded!');
       setForm({ description: '', amount: '', category: 'Supplies' });
       setIsSupplierPayment(false);
       setSelectedSupplierId('');
       load();
-    } else setMsg('❌ Failed to record.');
+    } catch (err) {
+      setMsg(`❌ ${err.message || 'Failed to record.'}`);
+    }
     setTimeout(() => setMsg(''), 3000);
   };
 

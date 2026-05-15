@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Eye, FileText, User, Phone, Calendar, IndianRupee, Download } from 'lucide-react';
 import QRCode from 'qrcode';
 import { generateBillPDF } from '../utils/pdfGenerator';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-export default function BillHistoryPage({ token }) {
+export default function BillHistoryPage() {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBill, setSelectedBill] = useState(null);
@@ -16,13 +15,10 @@ export default function BillHistoryPage({ token }) {
   const load = async () => {
     setLoading(true);
     try {
-      const [billsRes, cashRes] = await Promise.all([
-        fetch(`${API_BASE}/api/billing/history`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/api/small-income/history`, { headers: { Authorization: `Bearer ${token}` } })
+      const [billsData, cashData] = await Promise.all([
+        api.getBillHistory(),
+        api.getSmallIncomeHistory()
       ]);
-      
-      const billsData = await billsRes.json();
-      const cashData = await cashRes.json();
       
       const unified = [
         ...billsData.map(b => ({ ...b, isQuickCash: false })),

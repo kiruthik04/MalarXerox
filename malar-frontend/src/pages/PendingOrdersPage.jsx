@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Plus, CheckCircle, Trash2, Phone, User, ClipboardList, AlertCircle } from 'lucide-react';
+import { api } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-const PendingOrdersPage = ({ token }) => {
+const PendingOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -12,13 +11,8 @@ const PendingOrdersPage = ({ token }) => {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/pending-orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data);
-      }
+      const data = await api.getPendingOrders();
+      setOrders(data);
     } catch (err) {
       console.error("Failed to fetch pending orders", err);
     } finally {
@@ -28,7 +22,7 @@ const PendingOrdersPage = ({ token }) => {
 
   useEffect(() => {
     fetchOrders();
-  }, [token]);
+  }, []);
 
   const handleAddOrder = async (e) => {
     e.preventDefault();
@@ -39,34 +33,19 @@ const PendingOrdersPage = ({ token }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/pending-orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(newOrder)
-      });
-
-      if (res.ok) {
-        setNewOrder({ customerName: '', phone: '', orderDetails: '' });
-        setShowAddForm(false);
-        fetchOrders();
-      } else {
-        setError('Failed to add order.');
-      }
+      await api.addPendingOrder(newOrder);
+      setNewOrder({ customerName: '', phone: '', orderDetails: '' });
+      setShowAddForm(false);
+      fetchOrders();
     } catch (err) {
-      setError('Error connecting to server.');
+      setError(err.message || 'Failed to add order.');
     }
   };
 
   const handleComplete = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/api/pending-orders/${id}/complete`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) fetchOrders();
+      await api.completePendingOrder(id);
+      fetchOrders();
     } catch (err) {
       console.error("Failed to complete order", err);
     }
@@ -75,11 +54,8 @@ const PendingOrdersPage = ({ token }) => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this reminder?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/pending-orders/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) fetchOrders();
+      await api.deletePendingOrder(id);
+      fetchOrders();
     } catch (err) {
       console.error("Failed to delete order", err);
     }
