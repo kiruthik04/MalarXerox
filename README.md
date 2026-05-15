@@ -13,11 +13,19 @@
   <img src="https://img.shields.io/badge/JWT-Black?style=for-the-badge&logo=JSON%20web%20tokens" />
 </div>
 
+<div align="center">
+  <a href="https://malarxerox.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Live_Demo-malarxerox.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+  </a>
+</div>
+
 <br/>
 
 ## 📖 Overview
 
 Malar Xerox is a comprehensive, full-stack management platform designed to digitize and streamline operations for a modern copy, print, and e-services shop. It provides a beautiful, responsive public storefront for customers, paired with a powerful, secure administrative dashboard for the staff.
+
+**🌐 Live Website:** [malarxerox.vercel.app](https://malarxerox.vercel.app)
 
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%" />
 
