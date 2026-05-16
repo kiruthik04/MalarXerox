@@ -113,21 +113,19 @@ export default function DebtsPage({ role }) {
     <div>
       <div className="page-header">
         <div><h2>Customer Debts</h2><p>Track pending payments and credits</p></div>
-        {role !== 'EMPLOYEE' && (
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                className="form-input" 
-                placeholder="Filter by customer..." 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '32px', width: '250px', marginBottom: 0 }}
-              />
-            </div>
-            <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              className="form-input" 
+              placeholder="Filter by customer..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: '32px', width: '250px', marginBottom: 0 }}
+            />
           </div>
-        )}
+          <button className="btn-outline" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        </div>
       </div>
 
       {msg && <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', background: '#dbeafe', color: '#1e40af', fontWeight: 600 }}>{msg}</div>}
@@ -161,33 +159,28 @@ export default function DebtsPage({ role }) {
             </form>
           </div>
 
-          {role !== 'EMPLOYEE' && (
-            <>
-              <div className="stat-card" style={{ marginTop: '1.5rem', background: 'white', border: '1px solid #fee2e2' }}>
-                <div className="stat-title">Total Pending Debts</div>
-                <div className="stat-value" style={{ color: '#ef4444' }}>₹{pendingTotal.toFixed(2)}</div>
-              </div>
+          <div className="stat-card" style={{ marginTop: '1.5rem', background: 'white', border: '1px solid #fee2e2' }}>
+            <div className="stat-title">Total Pending Debts {role === 'EMPLOYEE' && '(View Only)'}</div>
+            <div className="stat-value" style={{ color: '#ef4444' }}>₹{pendingTotal.toFixed(2)}</div>
+          </div>
 
-              {searchTerm && filteredPendingDebts.length > 0 && (
-                <div className="stat-card" style={{ marginTop: '1rem', background: '#f0fdf4', border: '1px solid #dcfce7' }}>
-                  <div className="stat-title" style={{ color: '#166534' }}>Total for "{searchTerm}"</div>
-                  <div className="stat-value" style={{ color: '#15803d' }}>₹{filteredPendingTotal.toFixed(2)}</div>
-                  <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: '#166534' }}>{filteredPendingDebts.length} pending records</p>
-                  <button 
-                    className="btn-success" 
-                    style={{ width: '100%', marginTop: '0.75rem' }}
-                    onClick={() => settleMultiple(filteredPendingDebts.map(d => d.id))}
-                  >
-                    <CheckCircle size={14} /> Settle All Filtered
-                  </button>
-                </div>
-              )}
-            </>
+          {searchTerm && filteredPendingDebts.length > 0 && (
+            <div className="stat-card" style={{ marginTop: '1rem', background: '#f0fdf4', border: '1px solid #dcfce7' }}>
+              <div className="stat-title" style={{ color: '#166534' }}>Total for "{searchTerm}"</div>
+              <div className="stat-value" style={{ color: '#15803d' }}>₹{filteredPendingTotal.toFixed(2)}</div>
+              <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: '#166534' }}>{filteredPendingDebts.length} pending records</p>
+              <button 
+                className="btn-success" 
+                style={{ width: '100%', marginTop: '0.75rem' }}
+                onClick={() => settleMultiple(filteredPendingDebts.map(d => d.id))}
+              >
+                <CheckCircle size={14} /> Settle All Filtered
+              </button>
+            </div>
           )}
         </div>
 
-        {role !== 'EMPLOYEE' && (
-          <div className="admin-table-wrap">
+        <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr><th>Customer</th><th className="text-right">Amount</th><th>Added On</th><th>Reason</th><th className="text-center">Status</th><th className="text-center">Actions</th></tr>
@@ -222,7 +215,9 @@ export default function DebtsPage({ role }) {
                             Mark Paid
                           </button>
                         )}
-                        <button onClick={() => remove(d.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Record"><Trash2 size={16} /></button>
+                        {role === 'ADMIN' && (
+                          <button onClick={() => remove(d.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Record"><Trash2 size={16} /></button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -230,8 +225,7 @@ export default function DebtsPage({ role }) {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
     </div>
   );
 }

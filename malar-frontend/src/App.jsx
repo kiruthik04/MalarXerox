@@ -328,13 +328,15 @@ const OverviewPage = () => {
           <p>Here's what's happening at Malar Xerox today.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <button 
-              className="btn-outline" 
-              style={{ background: isOpeningBalanceSet ? '#f0fdf4' : '#fff7ed', borderColor: isOpeningBalanceSet ? '#22c55e' : '#f97316' }}
-              onClick={() => setShowOpeningModal(true)}
-            >
-              <Wallet size={16} /> {isOpeningBalanceSet ? 'Update Opening Balance' : 'Set Opening Balance'}
-            </button>
+            {(!isOpeningBalanceSet || auth.role === 'ADMIN') && (
+              <button 
+                className="btn-outline" 
+                style={{ background: isOpeningBalanceSet ? '#f0fdf4' : '#fff7ed', borderColor: isOpeningBalanceSet ? '#22c55e' : '#f97316' }}
+                onClick={() => setShowOpeningModal(true)}
+              >
+                <Wallet size={16} /> {isOpeningBalanceSet ? 'Update Opening Balance' : 'Set Opening Balance'}
+              </button>
+            )}
             {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
                 <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'pulse 2s infinite' }}>
                     <div style={{ color: '#ef4444' }}><Bell size={18} /></div>
