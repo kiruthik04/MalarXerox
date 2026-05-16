@@ -42,7 +42,7 @@ const headerOpts = {
 function MoreStackNavigator() {
   return (
     <MoreStack.Navigator screenOptions={headerOpts}>
-      <MoreStack.Screen name="More" component={MoreScreen} />
+      <MoreStack.Screen name="Menu" component={MoreScreen} />
       <MoreStack.Screen name="New Bill" component={NewBillScreen} />
       <MoreStack.Screen name="Quick Cash" component={QuickCashScreen} />
       <MoreStack.Screen name="Reminders" component={RemindersScreen} />
