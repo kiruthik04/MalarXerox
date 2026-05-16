@@ -62,6 +62,7 @@ export const api = {
   // Dashboard
   getDashboardData: () => fetchApi('/api/dashboard/data'),
   getDashboardHistorical: () => fetchApi('/api/dashboard/historical'),
+  setOpeningBalance: (amount) => fetchApi('/api/dashboard/opening-balance', { method: 'POST', body: JSON.stringify({ amount }) }),
   
   // Services & Catalog
   getServices: () => fetchApi('/api/services'),

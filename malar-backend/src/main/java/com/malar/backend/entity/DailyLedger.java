@@ -24,6 +24,9 @@ public class DailyLedger {
     @Column(name = "net_profit")
     private BigDecimal netProfit;
 
+    @Column(name = "opening_balance")
+    private BigDecimal openingBalance = BigDecimal.ZERO;
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -39,5 +42,8 @@ public class DailyLedger {
     
     public BigDecimal getNetProfit() { return netProfit; }
     public void setNetProfit(BigDecimal netProfit) { this.netProfit = netProfit; }
+
+    public BigDecimal getOpeningBalance() { return openingBalance; }
+    public void setOpeningBalance(BigDecimal openingBalance) { this.openingBalance = openingBalance; }
 }
 

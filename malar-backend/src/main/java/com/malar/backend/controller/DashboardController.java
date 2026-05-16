@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malar.backend.entity.Bill;
 import com.malar.backend.entity.Debt;
 import com.malar.backend.entity.Expense;
+import com.malar.backend.entity.DailyLedger;
 import com.malar.backend.entity.Inventory;
 import com.malar.backend.entity.ServiceSale;
+import com.malar.backend.repository.DailyLedgerRepository;
 import com.malar.backend.repository.InventoryRepository;
 import com.malar.backend.repository.ServiceSaleRepository;
 import com.malar.backend.repository.BillRepository;
@@ -50,6 +52,9 @@ public class DashboardController {
 
     @Autowired
     private com.malar.backend.repository.SmallIncomeRepository smallIncomeRepository;
+
+    @Autowired
+    private DailyLedgerRepository dailyLedgerRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -161,12 +166,23 @@ public class DashboardController {
             
             long pendingOrdersCount = pendingOrderRepository.findByCompletedFalseOrderByCreatedAtDesc().size();
 
+            // Fetch opening balance from DailyLedger
+            BigDecimal openingBalance = BigDecimal.ZERO;
+            Optional<DailyLedger> todayLedger = dailyLedgerRepository.findByTransactionDate(today);
+            if (todayLedger.isPresent()) {
+                openingBalance = todayLedger.get().getOpeningBalance() != null ? todayLedger.get().getOpeningBalance() : BigDecimal.ZERO;
+            }
+
+            BigDecimal cashInHand = openingBalance.add(dailyIncome).subtract(dailyExpenses);
+
             Map<String, Object> stats = new HashMap<>();
             stats.put("dailyIncome", "₹" + String.format("%.2f", dailyIncome));
             stats.put("dailyExpenses", "₹" + String.format("%.2f", dailyExpenses));
             stats.put("netProfit", "₹" + String.format("%.2f", netProfit));
             stats.put("yesterdayDebt", yesterdayDebt.compareTo(BigDecimal.ZERO) > 0 ? "₹" + String.format("%.2f", yesterdayDebt) : null);
             stats.put("pendingOrders", pendingOrdersCount);
+            stats.put("openingBalance", "₹" + String.format("%.2f", openingBalance));
+            stats.put("cashInHand", "₹" + String.format("%.2f", cashInHand));
             
             data.put("stats", stats);
             return ResponseEntity.ok(data);
@@ -175,6 +191,34 @@ public class DashboardController {
             Map<String, String> err = new HashMap<>();
             err.put("error", "Dashboard loading failed: " + e.toString());
             return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/opening-balance")
+    public ResponseEntity<?> setOpeningBalance(@RequestBody Map<String, BigDecimal> payload) {
+        try {
+            BigDecimal amount = payload.get("amount");
+            if (amount == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
+            }
+
+            LocalDate today = LocalDate.now();
+            DailyLedger ledger = dailyLedgerRepository.findByTransactionDate(today)
+                    .orElseGet(() -> {
+                        DailyLedger nl = new DailyLedger();
+                        nl.setTransactionDate(today);
+                        nl.setTotalIncome(BigDecimal.ZERO);
+                        nl.setTotalExpenses(BigDecimal.ZERO);
+                        nl.setNetProfit(BigDecimal.ZERO);
+                        return nl;
+                    });
+            
+            ledger.setOpeningBalance(amount);
+            dailyLedgerRepository.save(ledger);
+
+            return ResponseEntity.ok(Map.of("message", "Opening balance updated successfully", "openingBalance", amount));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -209,15 +253,27 @@ public class DashboardController {
                 dayMap.get(date).merge("expense", e.getAmount() != null ? e.getAmount() : BigDecimal.ZERO, BigDecimal::add);
             }
 
+            // Add Opening Balances from DailyLedger
+            List<DailyLedger> allLedgers = dailyLedgerRepository.findAll();
+            for (DailyLedger l : allLedgers) {
+                LocalDate date = l.getTransactionDate();
+                dayMap.putIfAbsent(date, createDayMap());
+                dayMap.get(date).put("openingBalance", l.getOpeningBalance() != null ? l.getOpeningBalance() : BigDecimal.ZERO);
+            }
+
             List<Map<String, Object>> result = new ArrayList<>();
             for (Map.Entry<LocalDate, Map<String, BigDecimal>> entry : dayMap.entrySet()) {
                 Map<String, Object> row = new HashMap<>();
                 row.put("date", entry.getKey().toString());
                 BigDecimal income = entry.getValue().get("income");
                 BigDecimal expense = entry.getValue().get("expense");
+                BigDecimal openingBalance = entry.getValue().getOrDefault("openingBalance", BigDecimal.ZERO);
+                
                 row.put("income", income);
                 row.put("expense", expense);
+                row.put("openingBalance", openingBalance);
                 row.put("netProfit", income.subtract(expense));
+                row.put("cashInHand", openingBalance.add(income).subtract(expense));
                 result.add(row);
             }
 

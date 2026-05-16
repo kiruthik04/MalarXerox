@@ -68,9 +68,11 @@ const DailyAccountingPage = () => {
             <thead>
               <tr>
                 <th>Date</th>
+                <th className="text-right">Opening Balance</th>
                 <th className="text-right">Income</th>
                 <th className="text-right">Expense</th>
                 <th className="text-right">Net Profit</th>
+                <th className="text-right">Cash in Hand</th>
                 <th style={{ width: '200px' }}>Visual Comparison</th>
               </tr>
             </thead>
@@ -83,6 +85,7 @@ const DailyAccountingPage = () => {
                 return (
                   <tr key={day.date}>
                     <td style={{ fontWeight: 600 }}>{formatDate(day.date)}</td>
+                    <td className="text-right" style={{ color: '#6366f1' }}>₹{(day.openingBalance || 0).toFixed(2)}</td>
                     <td className="text-right" style={{ color: '#16a34a', fontWeight: 600 }}>₹{day.income.toFixed(2)}</td>
                     <td className="text-right" style={{ color: '#ef4444' }}>₹{day.expense.toFixed(2)}</td>
                     <td className="text-right" style={{ fontWeight: 700, color: day.netProfit >= 0 ? '#1e40af' : '#b91c1c' }}>
@@ -91,6 +94,7 @@ const DailyAccountingPage = () => {
                         ₹{day.netProfit.toFixed(2)}
                       </div>
                     </td>
+                    <td className="text-right" style={{ fontWeight: 700, color: '#10b981' }}>₹{(day.cashInHand || 0).toFixed(2)}</td>
                     <td>
                       <div style={{ 
                         height: '10px', 

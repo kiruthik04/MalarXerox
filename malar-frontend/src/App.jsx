@@ -2,9 +2,9 @@ import React, { useState, useEffect, useContext, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Printer, FileText, Smartphone, PenTool, Menu, X, LayoutDashboard,
-  TrendingUp, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
+  TrendingUp, TrendingDown, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
   Users, PlusCircle, Zap, Award, ShieldCheck, Receipt, Package,
-  History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera,
+  History, Cpu, LogOut, ChevronRight, Wallet, UserX, Camera, Clock,
   BookOpen, CreditCard, BookMarked, ScanLine, Bell, Coins, UserPlus
 } from 'lucide-react';
 import BillingPage from './pages/BillingPage';
@@ -275,10 +275,12 @@ const OverviewPage = () => {
   const [stats, setStats] = useState({});
   const [serviceSales, setServiceSales] = useState([]);
   const [recentBills, setRecentBills] = useState([]);
+  const [showOpeningModal, setShowOpeningModal] = useState(false);
+  const [openingInput, setOpeningInput] = useState('');
+  const [savingOpening, setSavingOpening] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!auth.token) { navigate('/login'); return; }
+  const loadData = () => {
     api.getDashboardData()
       .then(d => { 
         setStats(d.stats || {}); 
@@ -286,7 +288,28 @@ const OverviewPage = () => {
         setRecentBills(d.recentBills || []);
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!auth.token) { navigate('/login'); return; }
+    loadData();
   }, [auth.token]);
+
+  const handleSetOpeningBalance = async (e) => {
+    e.preventDefault();
+    if (!openingInput || isNaN(openingInput)) return;
+    setSavingOpening(true);
+    try {
+      await api.setOpeningBalance(parseFloat(openingInput));
+      setShowOpeningModal(false);
+      setOpeningInput('');
+      loadData();
+    } catch (err) {
+      alert("Failed to set opening balance: " + err.message);
+    } finally {
+      setSavingOpening(false);
+    }
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -294,6 +317,8 @@ const OverviewPage = () => {
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
   };
+
+  const isOpeningBalanceSet = stats.openingBalance && stats.openingBalance !== '₹0.00';
 
   return (
     <AdminLayout pageTitle="Operations Overview">
@@ -303,6 +328,13 @@ const OverviewPage = () => {
           <p>Here's what's happening at Malar Xerox today.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn-outline" 
+              style={{ background: isOpeningBalanceSet ? '#f0fdf4' : '#fff7ed', borderColor: isOpeningBalanceSet ? '#22c55e' : '#f97316' }}
+              onClick={() => setShowOpeningModal(true)}
+            >
+              <Wallet size={16} /> {isOpeningBalanceSet ? 'Update Opening Balance' : 'Set Opening Balance'}
+            </button>
             {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
                 <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'pulse 2s infinite' }}>
                     <div style={{ color: '#ef4444' }}><Bell size={18} /></div>
@@ -321,17 +353,64 @@ const OverviewPage = () => {
 
       <div className="overview-stats">
         {[
-          { label: 'Daily Income', value: stats.dailyIncome || '₹0.00', color: 'var(--primary-dark)' },
-          { label: 'Daily Expenses', value: stats.dailyExpenses || '₹0.00', color: '#ef4444' },
-          { label: 'Net Profit', value: stats.netProfit || '₹0.00', color: '#155496' },
-          { label: 'Pending Orders', value: stats.pendingOrders || 0, color: '#f59e0b' },
+          { label: 'Opening Balance', value: stats.openingBalance || '₹0.00', color: '#6366f1', icon: <Wallet size={20} /> },
+          { label: 'Daily Income', value: stats.dailyIncome || '₹0.00', color: 'var(--primary-dark)', icon: <TrendingUp size={20} /> },
+          { label: 'Daily Expenses', value: stats.dailyExpenses || '₹0.00', color: '#ef4444', icon: <TrendingDown size={20} /> },
+          { label: 'Cash in Hand', value: stats.cashInHand || '₹0.00', color: '#10b981', icon: <Coins size={20} /> },
         ].map(s => (
-          <div key={s.label} className="stat-card">
-            <div className="stat-title">{s.label}</div>
+          <div key={s.label} className="stat-card" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', opacity: 0.05, color: s.color }}>
+                {React.cloneElement(s.icon, { size: 80 })}
+            </div>
+            <div className="stat-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {s.icon} {s.label}
+            </div>
             <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
+
+      {/* Opening Balance Modal */}
+      {showOpeningModal && (
+        <div className="modal-overlay" style={{ zIndex: 1000 }} onClick={() => setShowOpeningModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><Wallet size={20} style={{ marginRight: '0.5rem' }} /> Cashier Opening Balance</h3>
+              <button className="close-btn" onClick={() => setShowOpeningModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Enter the physical cash amount currently in the machine to start the day's tracking.
+              </p>
+              <form onSubmit={handleSetOpeningBalance}>
+                <div className="form-group">
+                  <label>Amount (₹)</label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 600 }}>₹</span>
+                    <input 
+                      className="form-input" 
+                      type="number" 
+                      step="0.01"
+                      placeholder="0.00" 
+                      style={{ paddingLeft: '2rem' }}
+                      value={openingInput} 
+                      onChange={e => setOpeningInput(e.target.value)} 
+                      autoFocus
+                      required 
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <button type="button" className="btn-outline" style={{ flex: 1 }} onClick={() => setShowOpeningModal(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary" style={{ flex: 2 }} disabled={savingOpening}>
+                    {savingOpening ? 'Saving...' : 'Set Balance'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="responsive-grid" style={{ marginTop: '1rem' }}>
         <div>
