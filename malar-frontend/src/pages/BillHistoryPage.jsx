@@ -144,7 +144,7 @@ export default function BillHistoryPage() {
               <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{filterText ? 'No matching bills found.' : 'No paid bills found.'}</td></tr>
             ) : sortedBills.map((bill, i) => (
               <tr key={bill.id}>
-                <td style={{ color: 'var(--text-muted)' }}>{allPaidBills.length - allPaidBills.indexOf(bill)}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{sortedBills.length - i}</td>
                 <td>
                     <span className={`badge ${bill.isQuickCash ? 'badge-orange' : 'badge-green'}`} style={{ fontSize: '0.75rem' }}>
                         {bill.isQuickCash ? 'CASH' : `#${bill.displayId || bill.id}`}
