@@ -12,7 +12,7 @@ public class DailyLedger {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "transaction_date", nullable = false, unique = true)
+    @Column(name = "transaction_date", nullable = false, unique = true, updatable = false)
     private LocalDate transactionDate;
 
     @Column(name = "total_income")
