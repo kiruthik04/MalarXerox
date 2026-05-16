@@ -124,7 +124,7 @@ const AdminLayout = ({ children, pageTitle }) => {
     { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
     { to: '/dashboard/suppliers', label: 'Suppliers & Balance', icon: <Users size={18} />, roles: ['ADMIN'] },
     { to: '/dashboard/debts', label: 'Customer Debts', icon: <UserX size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
-    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} />, roles: ['ADMIN'] },
+    { to: '/dashboard/history', label: 'Bill History', icon: <History size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
     { to: '/dashboard/accounting', label: 'Daily Accounting', icon: <TrendingUp size={18} />, roles: ['ADMIN'] },
     { to: '/dashboard/inventory', label: 'Inventory', icon: <Package size={18} />, roles: ['ADMIN'] },
     { to: '/dashboard/catalog', label: 'Add Services and Product', icon: <Cpu size={18} />, roles: ['ADMIN'] },
@@ -843,7 +843,6 @@ const DashboardInventory = () => {
 const DashboardHistory = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
   return <AdminLayout pageTitle="Bill History"><BillHistoryPage token={auth.token} /></AdminLayout>; 
 };
 const DashboardCatalog = () => { 
