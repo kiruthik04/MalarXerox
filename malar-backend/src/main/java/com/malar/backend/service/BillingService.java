@@ -55,8 +55,18 @@ public class BillingService {
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = now.toLocalDate().atTime(LocalTime.MAX);
         
-        long countToday = billRepository.countByCreatedAtBetween(startOfDay, endOfDay);
-        int nextSeq = (int) countToday + 1;
+        Optional<Bill> lastBill = billRepository.findTopByCreatedAtBetweenOrderByIdDesc(startOfDay, endOfDay);
+        int nextSeq = 1;
+        if (lastBill.isPresent() && lastBill.get().getDisplayId() != null) {
+            try {
+                String lastDisplayId = lastBill.get().getDisplayId();
+                String lastSeqStr = lastDisplayId.substring(lastDisplayId.lastIndexOf("-") + 1);
+                nextSeq = Integer.parseInt(lastSeqStr) + 1;
+            } catch (Exception e) {
+                // Fallback to count if format is unexpected
+                nextSeq = (int) billRepository.countByCreatedAtBetween(startOfDay, endOfDay) + 1;
+            }
+        }
         
         String datePart = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         bill.setDisplayId(String.format("%s-%04d", datePart, nextSeq));

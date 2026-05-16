@@ -194,7 +194,7 @@ const AdminLayout = ({ children, pageTitle }) => {
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <Bell size={20} />
-                {( (stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00') || (stats.pendingOrders > 0) ) && (
+                {( (stats.totalPendingDebt && stats.totalPendingDebt !== '₹0.00') || (stats.pendingOrders > 0) ) && (
                   <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
                 )}
               </div>
@@ -207,11 +207,11 @@ const AdminLayout = ({ children, pageTitle }) => {
                     <div style={{ padding: '1rem', borderBottom: '1px solid #f0f7ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Notifications</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--primary-dark)', fontWeight: 600 }}>
-                        { ( (stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' ? 1 : 0) + (stats.pendingOrders > 0 ? 1 : 0) ) } New
+                        { ( (stats.totalPendingDebt && stats.totalPendingDebt !== '₹0.00' ? 1 : 0) + (stats.pendingOrders > 0 ? 1 : 0) ) } New
                       </span>
                     </div>
                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                      {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
+                      {stats.totalPendingDebt && stats.totalPendingDebt !== '₹0.00' && (
                         <div 
                           style={{ padding: '1rem', display: 'flex', gap: '0.75rem', background: '#fff5f5', borderBottom: '1px solid #fee2e2', cursor: 'pointer' }}
                           onClick={() => { navigate('/dashboard/debts'); setShowNotifications(false); }}
@@ -220,8 +220,8 @@ const AdminLayout = ({ children, pageTitle }) => {
                             <UserX size={18} />
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.2rem' }}>Yesterday's Debt Reminder</div>
-                            <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>Total pending: {stats.yesterdayDebt}</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.2rem' }}>Pending Customer Debt</div>
+                            <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>Total pending: {stats.totalPendingDebt}</div>
                             <div style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '0.4rem', textDecoration: 'underline' }}>View customers →</div>
                           </div>
                         </div>
@@ -243,7 +243,7 @@ const AdminLayout = ({ children, pageTitle }) => {
                         </div>
                       )}
 
-                      {(!stats.yesterdayDebt || stats.yesterdayDebt === '₹0.00') && stats.pendingOrders === 0 && (
+                      {(!stats.totalPendingDebt || stats.totalPendingDebt === '₹0.00') && stats.pendingOrders === 0 && (
                         <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
                           <Bell size={24} style={{ opacity: 0.2, marginBottom: '0.5rem' }} />
                           <p style={{ fontSize: '0.85rem', margin: 0 }}>All caught up!</p>
@@ -337,12 +337,12 @@ const OverviewPage = () => {
                 <Wallet size={16} /> {isOpeningBalanceSet ? 'Update Opening Balance' : 'Set Opening Balance'}
               </button>
             )}
-            {stats.yesterdayDebt && stats.yesterdayDebt !== '₹0.00' && (
+            {stats.totalPendingDebt && stats.totalPendingDebt !== '₹0.00' && (
                 <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'pulse 2s infinite' }}>
                     <div style={{ color: '#ef4444' }}><Bell size={18} /></div>
                     <div>
                         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#991b1b' }}>DEBT REMINDER</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ef4444' }}>{stats.yesterdayDebt} from yesterday</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ef4444' }}>{stats.totalPendingDebt} total pending</div>
                     </div>
                     <Link to="/dashboard/debts" style={{ fontSize: '0.8rem', color: '#b91c1c', fontWeight: 600, textDecoration: 'underline' }}>View</Link>
                 </div>

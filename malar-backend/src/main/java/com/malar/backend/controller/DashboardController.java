@@ -97,10 +97,9 @@ public class DashboardController {
 
             BigDecimal netProfit = dailyIncome.subtract(dailyExpenses);
 
-            // Previous Day Debt
-            LocalDate yesterday = today.minusDays(1);
-            BigDecimal yesterdayDebt = debtRepository.findAll().stream()
-                    .filter(d -> d.getCreatedAt() != null && d.getCreatedAt().toLocalDate().isEqual(yesterday) && !d.isSettled())
+            // All Pending Debts
+            BigDecimal totalPendingDebt = debtRepository.findAll().stream()
+                    .filter(d -> !d.isSettled())
                     .map(Debt::getAmount)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -179,7 +178,7 @@ public class DashboardController {
             stats.put("dailyIncome", "₹" + String.format("%.2f", dailyIncome));
             stats.put("dailyExpenses", "₹" + String.format("%.2f", dailyExpenses));
             stats.put("netProfit", "₹" + String.format("%.2f", netProfit));
-            stats.put("yesterdayDebt", yesterdayDebt.compareTo(BigDecimal.ZERO) > 0 ? "₹" + String.format("%.2f", yesterdayDebt) : null);
+            stats.put("totalPendingDebt", totalPendingDebt.compareTo(BigDecimal.ZERO) > 0 ? "₹" + String.format("%.2f", totalPendingDebt) : null);
             stats.put("pendingOrders", pendingOrdersCount);
             stats.put("openingBalance", "₹" + String.format("%.2f", openingBalance));
             stats.put("cashInHand", "₹" + String.format("%.2f", cashInHand));
@@ -214,6 +213,38 @@ public class DashboardController {
                     });
             
             ledger.setOpeningBalance(amount);
+
+            // Sync today's totals while we are at it
+            try {
+                LocalDateTime startOfDay = today.atStartOfDay();
+                LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+                
+                BigDecimal billIncome = billRepository.findAll().stream()
+                        .filter(b -> b.getCreatedAt() != null && b.getCreatedAt().toLocalDate().isEqual(today))
+                        .map(Bill::getGrandTotal)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                BigDecimal smallIncome = smallIncomeRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(startOfDay, endOfDay).stream()
+                        .map(com.malar.backend.entity.SmallIncome::getAmount)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                BigDecimal totalIncome = billIncome.add(smallIncome);
+                
+                BigDecimal totalExpenses = expenseRepository.findAll().stream()
+                        .filter(e -> e.getCreatedAt() != null && e.getCreatedAt().toLocalDate().isEqual(today))
+                        .map(Expense::getAmount)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                ledger.setTotalIncome(totalIncome);
+                ledger.setTotalExpenses(totalExpenses);
+                ledger.setNetProfit(totalIncome.subtract(totalExpenses));
+            } catch (Exception e) {
+                System.err.println("Ledger sync warning: " + e.getMessage());
+            }
+
             dailyLedgerRepository.save(ledger);
 
             return ResponseEntity.ok(Map.of("message", "Opening balance updated successfully", "openingBalance", amount));
