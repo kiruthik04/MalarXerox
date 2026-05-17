@@ -26,7 +26,7 @@ public class SmallIncomeController {
             BigDecimal amount = new BigDecimal(request.get("amount").toString());
             SmallIncome income = new SmallIncome();
             income.setAmount(amount);
-            income.setCreatedAt(LocalDateTime.now());
+            income.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
             
             SmallIncome saved = smallIncomeRepository.save(income);
             return ResponseEntity.ok(saved);
@@ -42,8 +42,8 @@ public class SmallIncomeController {
 
     @GetMapping("/today")
     public ResponseEntity<List<SmallIncome>> getTodaySmallIncome() {
-        LocalDateTime start = LocalDateTime.now().toLocalDate().atStartOfDay();
-        LocalDateTime end = LocalDateTime.now().toLocalDate().atTime(LocalTime.MAX);
+        LocalDateTime start = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")).toLocalDate().atStartOfDay();
+        LocalDateTime end = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")).toLocalDate().atTime(LocalTime.MAX);
         return ResponseEntity.ok(smallIncomeRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end));
     }
 }

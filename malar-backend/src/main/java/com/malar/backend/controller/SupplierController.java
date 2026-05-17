@@ -42,7 +42,7 @@ public class SupplierController {
     public ResponseEntity<?> addBill(@PathVariable Long id, @RequestBody SupplierBill bill) {
         return supplierRepository.findById(id).map(supplier -> {
             bill.setSupplier(supplier);
-            bill.setCreatedAt(LocalDateTime.now());
+            bill.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
             supplierBillRepository.save(bill);
             
             // Increase supplier balance

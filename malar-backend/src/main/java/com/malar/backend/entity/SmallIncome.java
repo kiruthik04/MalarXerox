@@ -14,7 +14,7 @@ public class SmallIncome {
     private BigDecimal amount;
     private String category = "General"; // Optional: if they want to categorize small income later
     
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

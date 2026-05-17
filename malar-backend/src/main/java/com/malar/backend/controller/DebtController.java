@@ -37,7 +37,7 @@ public class DebtController {
 
     @PostMapping
     public ResponseEntity<?> add(@RequestBody Debt debt) {
-        debt.setCreatedAt(LocalDateTime.now());
+        debt.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
         debt.setSettled(false);
         Debt saved = debtRepository.save(debt);
         return ResponseEntity.ok(saved);
@@ -47,7 +47,7 @@ public class DebtController {
     public ResponseEntity<?> settle(@PathVariable Long id) {
         return debtRepository.findById(id).map(debt -> {
             debt.setSettled(true);
-            debt.setSettledAt(LocalDateTime.now());
+            debt.setSettledAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
             debtRepository.save(debt);
 
             // If this debt is linked to a specific Bill, update that bill's status to PAID
@@ -65,13 +65,13 @@ public class DebtController {
                 bill.setCustomerName(debt.getCustomerName());
                 bill.setPhone(debt.getPhone());
                 bill.setGrandTotal(debt.getAmount());
-                bill.setCreatedAt(LocalDateTime.now());
+                bill.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
                 bill.setStatus("PAID");
                 bill.setDisplayId(generateDisplayId(bill.getCreatedAt()));
 
                 // Create a single item list for the bill with timing details
                 String addedTime = debt.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
-                String paidTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
+                String paidTime = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")).format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm"));
                 
                 Map<String, Object> singleItem = new java.util.HashMap<>();
                 singleItem.put("service", "DEBT SETTLEMENT: " + (debt.getReason() != null ? debt.getReason() : "General Credit"));
@@ -108,7 +108,7 @@ public class DebtController {
                     .map(Debt::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
             // Create combined Bill
             Bill bill = new Bill();

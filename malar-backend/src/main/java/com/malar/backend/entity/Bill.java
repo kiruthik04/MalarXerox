@@ -19,7 +19,7 @@ public class Bill {
     private String itemsJson; // stored as JSON string
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
     private String status = "PAID"; // PAID or DEBT
     

@@ -25,7 +25,7 @@ public class ExpenseService {
 
     @Transactional
     public Expense addExpense(Expense expense) {
-        expense.setCreatedAt(LocalDateTime.now());
+        expense.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
         
         if (expense.getSupplier() != null && expense.getSupplier().getId() != null) {
             supplierRepository.findById(expense.getSupplier().getId()).ifPresent(supplier -> {

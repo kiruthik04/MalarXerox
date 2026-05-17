@@ -50,7 +50,7 @@ public class BillingService {
         List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
         bill.setItemsJson(objectMapper.writeValueAsString(items));
         
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
         bill.setCreatedAt(now);
         
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
@@ -104,7 +104,7 @@ public class BillingService {
             debt.setPhone(bill.getPhone());
             debt.setAmount(bill.getGrandTotal());
             debt.setReason("Billing Record #" + saved.getId());
-            debt.setCreatedAt(LocalDateTime.now());
+            debt.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
             debt.setSettled(false);
             debt.setBillId(saved.getId());
             debtRepository.save(debt);

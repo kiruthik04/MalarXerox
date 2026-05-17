@@ -65,7 +65,7 @@ public class DashboardController {
             List<Bill> allBills = billRepository.findAllByOrderByCreatedAtDesc();
             List<com.malar.backend.entity.Expense> allExpenses = expenseRepository.findAll();
             
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
             List<Bill> todayBills = allBills.stream()
                     .filter(b -> b.getCreatedAt() != null && b.getCreatedAt().toLocalDate().isEqual(today))
                     .collect(Collectors.toList());
@@ -201,7 +201,7 @@ public class DashboardController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
             }
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
             DailyLedger ledger = dailyLedgerRepository.findByTransactionDate(today)
                     .orElseGet(() -> {
                         DailyLedger nl = new DailyLedger();

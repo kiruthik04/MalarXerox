@@ -43,6 +43,6 @@ public class PendingOrder {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
     }
 }
