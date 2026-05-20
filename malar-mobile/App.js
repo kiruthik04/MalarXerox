@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -56,6 +56,7 @@ function MoreStackNavigator() {
 }
 
 function MainTabs() {
+  const { auth } = useContext(AuthContext);
   return (
     <Tab.Navigator
       screenOptions={{
@@ -65,9 +66,12 @@ function MainTabs() {
         tabBarStyle: { borderTopColor: '#e2e8f0', paddingBottom: 4, height: 60 },
         tabBarLabelStyle: { fontSize: 11, marginBottom: 2 },
       }}
+      initialRouteName={auth.role === 'ADMIN' ? 'Overview' : 'Expenses'}
     >
-      <Tab.Screen name="Overview" component={DashboardScreen}
-        options={{ tabBarIcon: ({ color }) => <LayoutDashboard size={22} color={color} /> }} />
+      {auth.role === 'ADMIN' && (
+        <Tab.Screen name="Overview" component={DashboardScreen}
+          options={{ tabBarIcon: ({ color }) => <LayoutDashboard size={22} color={color} /> }} />
+      )}
       <Tab.Screen name="Expenses" component={ExpensesScreen}
         options={{ tabBarIcon: ({ color }) => <Wallet size={22} color={color} /> }} />
       <Tab.Screen name="Debts" component={DebtsScreen}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   Printer, FileText, Smartphone, PenTool, Menu, X, LayoutDashboard,
   TrendingUp, TrendingDown, PhoneCall, MessageCircle, Mail, FileSignature, Copy,
@@ -118,7 +118,7 @@ const AdminLayout = ({ children, pageTitle }) => {
   const logout = () => { setAuth({ token: null, username: null }); navigate('/'); };
 
   const navItems = [
-    { to: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={18} />, exact: true, roles: ['ADMIN', 'EMPLOYEE'] },
+    { to: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={18} />, exact: true, roles: ['ADMIN'] },
     { to: '/dashboard/small-income', label: 'Quick Cash', icon: <Coins size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
     { to: '/dashboard/billing', label: 'New Bill', icon: <Receipt size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
     { to: '/dashboard/expenses', label: 'Expenses', icon: <Wallet size={18} />, roles: ['ADMIN', 'EMPLOYEE'] },
@@ -292,8 +292,9 @@ const OverviewPage = () => {
 
   useEffect(() => {
     if (!auth.token) { navigate('/login'); return; }
+    if (auth.role === 'EMPLOYEE') { navigate('/dashboard/billing', { replace: true }); return; }
     loadData();
-  }, [auth.token]);
+  }, [auth.token, auth.role, navigate]);
 
   const handleSetOpeningBalance = async (e) => {
     e.preventDefault();
@@ -483,7 +484,11 @@ const LoginPage = () => {
     try {
       const data = await api.login({ username, password });
       setAuth({ token: data.token, username: data.username, role: data.role }); 
-      navigate('/dashboard');
+      if (data.role === 'EMPLOYEE') {
+        navigate('/dashboard/billing');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) { 
       setError(err.message || 'Invalid credentials'); 
     }
@@ -837,7 +842,7 @@ const DashboardBilling = () => {
 const DashboardInventory = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  if (auth.role === 'EMPLOYEE') return <Navigate to="/dashboard/billing" replace />;
   return <AdminLayout pageTitle="Inventory"><InventoryPage token={auth.token} /></AdminLayout>; 
 };
 const DashboardHistory = () => { 
@@ -848,7 +853,7 @@ const DashboardHistory = () => {
 const DashboardCatalog = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  if (auth.role === 'EMPLOYEE') return <Navigate to="/dashboard/billing" replace />;
   return <AdminLayout pageTitle="Add Services & Products"><AddCatalogPage token={auth.token} /></AdminLayout>; 
 };
 const DashboardExpenses = () => { 
@@ -874,19 +879,19 @@ const DashboardQuickCash = () => {
 const DashboardSuppliers = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  if (auth.role === 'EMPLOYEE') return <Navigate to="/dashboard/billing" replace />;
   return <AdminLayout pageTitle="Supplier Records"><SuppliersPage token={auth.token} /></AdminLayout>; 
 };
 const DashboardAccounting = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  if (auth.role === 'EMPLOYEE') return <Navigate to="/dashboard/billing" replace />;
   return <AdminLayout pageTitle="Daily Accounting Summary"><DailyAccountingPage token={auth.token} /></AdminLayout>; 
 };
 const DashboardEmployees = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  if (auth.role === 'EMPLOYEE') return <OverviewPage />;
+  if (auth.role === 'EMPLOYEE') return <Navigate to="/dashboard/billing" replace />;
   return <AdminLayout pageTitle="Employee Management"><EmployeeManagementPage token={auth.token} /></AdminLayout>; 
 };
 
