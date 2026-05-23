@@ -36,6 +36,28 @@ public class BillingController {
     public ResponseEntity<List<Bill>> getHistory() {
         return ResponseEntity.ok(billingService.getHistory());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateBill(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+        try {
+            Bill updated = billingService.updateBill(id, request);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to update bill: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBill(@PathVariable Long id) {
+        try {
+            billingService.deleteBill(id);
+            return ResponseEntity.ok(Map.of("message", "Bill deleted successfully"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete bill: " + e.getMessage()));
+        }
+    }
 }
 
 

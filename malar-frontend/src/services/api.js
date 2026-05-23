@@ -79,6 +79,8 @@ export const api = {
   // Billing
   saveBill: (billData) => fetchApi('/api/billing/save', { method: 'POST', body: JSON.stringify(billData) }),
   getBillHistory: () => fetchApi('/api/billing/history'),
+  updateBill: (id, billData) => fetchApi(`/api/billing/${id}`, { method: 'PUT', body: JSON.stringify(billData) }),
+  deleteBill: (id) => fetchApi(`/api/billing/${id}`, { method: 'DELETE' }),
   
   // Users (Admin only)
   getUsers: () => fetchApi('/api/auth/users'),
@@ -94,6 +96,8 @@ export const api = {
   // Small Income
   getSmallIncomeHistory: () => fetchApi('/api/small-income/history'),
   addSmallIncome: (data) => fetchApi('/api/small-income/add', { method: 'POST', body: JSON.stringify(data) }),
+  updateSmallIncome: (id, data) => fetchApi(`/api/small-income/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSmallIncome: (id) => fetchApi(`/api/small-income/${id}`, { method: 'DELETE' }),
 
   // Pending Orders
   getPendingOrders: () => fetchApi('/api/pending-orders'),

@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface DebtRepository extends JpaRepository<Debt, Long> {
     List<Debt> findAllByOrderByCreatedAtDesc();
+    List<Debt> findByBillId(Long billId);
 }

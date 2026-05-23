@@ -1,5 +1,6 @@
 package com.malar.backend.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malar.backend.entity.Bill;
 import com.malar.backend.entity.Debt;
@@ -115,5 +116,103 @@ public class BillingService {
 
     public List<Bill> getHistory() {
         return billRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Transactional
+    public Bill updateBill(Long id, Map<String, Object> request) throws Exception {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bill not found with ID: " + id));
+
+        // 1. Reverse old inventory impact
+        if (bill.getItemsJson() != null && !bill.getItemsJson().isEmpty()) {
+            List<Map<String, Object>> oldItems = objectMapper.readValue(bill.getItemsJson(), new TypeReference<List<Map<String, Object>>>() {});
+            for (Map<String, Object> item : oldItems) {
+                String serviceName = (String) item.get("service");
+                int qty = ((Number) item.get("qty")).intValue();
+                inventoryRepository.findByItemName(serviceName).ifPresent(inv -> {
+                    inv.setStockQuantity(inv.getStockQuantity() + qty);
+                    inventoryRepository.save(inv);
+                });
+            }
+        }
+
+        // 2. Apply new inventory impact
+        List<Map<String, Object>> newItems = (List<Map<String, Object>>) request.get("items");
+        for (Map<String, Object> item : newItems) {
+            String serviceName = (String) item.get("service");
+            int qty = ((Number) item.get("qty")).intValue();
+            inventoryRepository.findByItemName(serviceName).ifPresent(inv -> {
+                inv.setStockQuantity(Math.max(0, inv.getStockQuantity() - qty));
+                inventoryRepository.save(inv);
+            });
+        }
+
+        // 3. Update bill fields
+        String newStatus = (String) request.getOrDefault("status", "PAID");
+        bill.setCustomerName((String) request.getOrDefault("customerName", ""));
+        bill.setPhone((String) request.getOrDefault("phone", ""));
+        bill.setGrandTotal(new BigDecimal(request.get("grandTotal").toString()));
+        bill.setStatus(newStatus);
+        bill.setItemsJson(objectMapper.writeValueAsString(newItems));
+
+        Bill saved = billRepository.save(bill);
+
+        // 4. Update associated debts
+        List<Debt> associatedDebts = debtRepository.findByBillId(id);
+        if ("DEBT".equalsIgnoreCase(newStatus)) {
+            if (associatedDebts.isEmpty()) {
+                Debt debt = new Debt();
+                debt.setCustomerName(saved.getCustomerName());
+                debt.setPhone(saved.getPhone());
+                debt.setAmount(saved.getGrandTotal());
+                debt.setReason("Billing Record #" + saved.getId());
+                debt.setCreatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")));
+                debt.setSettled(false);
+                debt.setBillId(saved.getId());
+                debtRepository.save(debt);
+            } else {
+                for (Debt debt : associatedDebts) {
+                    debt.setCustomerName(saved.getCustomerName());
+                    debt.setPhone(saved.getPhone());
+                    debt.setAmount(saved.getGrandTotal());
+                    debt.setReason("Billing Record #" + saved.getId());
+                    debtRepository.save(debt);
+                }
+            }
+        } else {
+            if (!associatedDebts.isEmpty()) {
+                debtRepository.deleteAll(associatedDebts);
+            }
+        }
+
+        return saved;
+    }
+
+    @Transactional
+    public void deleteBill(Long id) throws Exception {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bill not found with ID: " + id));
+
+        // 1. Reverse inventory impact
+        if (bill.getItemsJson() != null && !bill.getItemsJson().isEmpty()) {
+            List<Map<String, Object>> items = objectMapper.readValue(bill.getItemsJson(), new TypeReference<List<Map<String, Object>>>() {});
+            for (Map<String, Object> item : items) {
+                String serviceName = (String) item.get("service");
+                int qty = ((Number) item.get("qty")).intValue();
+                inventoryRepository.findByItemName(serviceName).ifPresent(inv -> {
+                    inv.setStockQuantity(inv.getStockQuantity() + qty);
+                    inventoryRepository.save(inv);
+                });
+            }
+        }
+
+        // 2. Delete associated debts
+        List<Debt> associatedDebts = debtRepository.findByBillId(id);
+        if (!associatedDebts.isEmpty()) {
+            debtRepository.deleteAll(associatedDebts);
+        }
+
+        // 3. Delete bill
+        billRepository.delete(bill);
     }
 }

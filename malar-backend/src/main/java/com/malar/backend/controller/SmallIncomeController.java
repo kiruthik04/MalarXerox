@@ -46,4 +46,31 @@ public class SmallIncomeController {
         LocalDateTime end = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata")).toLocalDate().atTime(LocalTime.MAX);
         return ResponseEntity.ok(smallIncomeRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSmallIncome(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+        try {
+            return smallIncomeRepository.findById(id).map(income -> {
+                BigDecimal amount = new BigDecimal(request.get("amount").toString());
+                income.setAmount(amount);
+                if (request.containsKey("category")) {
+                    income.setCategory(request.get("category").toString());
+                }
+                SmallIncome saved = smallIncomeRepository.save(income);
+                return ResponseEntity.ok(saved);
+            }).orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSmallIncome(@PathVariable Long id) {
+        try {
+            smallIncomeRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "Quick cash deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

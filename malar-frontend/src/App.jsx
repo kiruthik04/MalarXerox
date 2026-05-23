@@ -848,7 +848,7 @@ const DashboardInventory = () => {
 const DashboardHistory = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  return <AdminLayout pageTitle="Bill History"><BillHistoryPage token={auth.token} /></AdminLayout>; 
+  return <AdminLayout pageTitle="Bill History"><BillHistoryPage token={auth.token} role={auth.role} /></AdminLayout>; 
 };
 const DashboardCatalog = () => { 
   const { auth } = useContext(AuthContext); 
@@ -874,7 +874,7 @@ const DashboardReminders = () => {
 const DashboardQuickCash = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} /></AdminLayout>; 
+  return <AdminLayout pageTitle="Quick Cash Entry"><QuickCashPage token={auth.token} role={auth.role} /></AdminLayout>; 
 };
 const DashboardSuppliers = () => { 
   const { auth } = useContext(AuthContext); 
