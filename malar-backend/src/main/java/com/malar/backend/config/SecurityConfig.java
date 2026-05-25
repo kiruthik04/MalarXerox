@@ -30,7 +30,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/services", "/api/ping").permitAll()
+                .requestMatchers("/api/auth/login", "/api/services", "/api/ping", "/api/ping/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/suppliers/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/billing/**").hasRole("ADMIN")

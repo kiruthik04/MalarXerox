@@ -21,7 +21,7 @@ public class KeepAliveTask {
     @Scheduled(fixedRate = 840000)
     public void pingServer() {
         try {
-            String url = serverUrl + "/api/ping";
+            String url = serverUrl.endsWith("/") ? serverUrl + "api/ping" : serverUrl + "/api/ping";
             logger.info("Pinging server to keep alive: {}", url);
             String response = restTemplate.getForObject(url, String.class);
             logger.info("Ping response: {}", response);
