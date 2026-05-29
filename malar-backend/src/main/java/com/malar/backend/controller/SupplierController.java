@@ -38,6 +38,16 @@ public class SupplierController {
         return supplierRepository.save(supplier);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Supplier updatedSupplier) {
+        return supplierRepository.findById(id).map(supplier -> {
+            supplier.setName(updatedSupplier.getName());
+            supplier.setContact(updatedSupplier.getContact());
+            supplierRepository.save(supplier);
+            return ResponseEntity.ok(supplier);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/{id}/bill")
     public ResponseEntity<?> addBill(@PathVariable Long id, @RequestBody SupplierBill bill) {
         return supplierRepository.findById(id).map(supplier -> {

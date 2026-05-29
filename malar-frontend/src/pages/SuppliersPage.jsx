@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, History, ArrowDownCircle, ArrowUpCircle, Receipt } from 'lucide-react';
+import { Plus, RefreshCw, History, ArrowDownCircle, ArrowUpCircle, Receipt, Edit } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
+  const [showEditSupplier, setShowEditSupplier] = useState(null);
   const [showAddBill, setShowAddBill] = useState(null);
   const [showHistory, setShowHistory] = useState(null);
   const [historyData, setHistoryData] = useState({ bills: [], payments: [] });
   
   const [supplierForm, setSupplierForm] = useState({ name: '', contact: '' });
+  const [editForm, setEditForm] = useState({ name: '', contact: '' });
   const [billForm, setBillForm] = useState({ amount: '', description: '' });
   const [msg, setMsg] = useState('');
 
@@ -46,6 +48,19 @@ export default function SuppliersPage() {
       loadSuppliers();
     } catch (err) {
       setMsg(`❌ ${err.message || 'Failed to add.'}`);
+    }
+    setTimeout(() => setMsg(''), 3000);
+  };
+
+  const updateSupplier = async (e) => {
+    e.preventDefault();
+    try {
+      await api.updateSupplier(showEditSupplier.id, editForm);
+      setMsg('✅ Supplier updated!');
+      setShowEditSupplier(null);
+      loadSuppliers();
+    } catch (err) {
+      setMsg(`❌ ${err.message || 'Failed to update.'}`);
     }
     setTimeout(() => setMsg(''), 3000);
   };
@@ -99,6 +114,9 @@ export default function SuppliersPage() {
                     <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => loadHistory(s)}>
                       <History size={14} /> History
                     </button>
+                    <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => { setShowEditSupplier(s); setEditForm({ name: s.name, contact: s.contact || '' }); }}>
+                      <Edit size={14} /> Edit
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -122,6 +140,26 @@ export default function SuppliersPage() {
                 <input className="form-input" placeholder="e.g. 9876543210 / Sathy" value={supplierForm.contact} onChange={e => setSupplierForm(f => ({ ...f, contact: e.target.value }))} />
               </div>
               <button type="submit" className="btn-success" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>Save Supplier</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Supplier Modal */}
+      {showEditSupplier && (
+        <div className="modal-overlay" onClick={() => setShowEditSupplier(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h3>Edit Supplier</h3><button className="close-btn" onClick={() => setShowEditSupplier(null)}>&times;</button></div>
+            <form onSubmit={updateSupplier}>
+              <div className="form-group">
+                <label>Supplier Name</label>
+                <input className="form-input" placeholder="e.g. Global Paper Mart" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required />
+              </div>
+              <div className="form-group">
+                <label>Contact Details (Phone/Address)</label>
+                <input className="form-input" placeholder="e.g. 9876543210 / Sathy" value={editForm.contact} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))} />
+              </div>
+              <button type="submit" className="btn-success" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>Update Supplier</button>
             </form>
           </div>
         </div>

@@ -90,6 +90,7 @@ export const api = {
   // Suppliers
   getSuppliers: () => fetchApi('/api/suppliers'),
   addSupplier: (data) => fetchApi('/api/suppliers', { method: 'POST', body: JSON.stringify(data) }),
+  updateSupplier: (id, data) => fetchApi(`/api/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   getSupplierHistory: (id) => fetchApi(`/api/suppliers/${id}/history`),
   addSupplierBill: (id, data) => fetchApi(`/api/suppliers/${id}/bill`, { method: 'POST', body: JSON.stringify(data) }),
 
