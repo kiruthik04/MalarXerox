@@ -43,6 +43,9 @@ public class SupplierController {
         return supplierRepository.findById(id).map(supplier -> {
             supplier.setName(updatedSupplier.getName());
             supplier.setContact(updatedSupplier.getContact());
+            if (updatedSupplier.getBalance() != null) {
+                supplier.setBalance(updatedSupplier.getBalance());
+            }
             supplierRepository.save(supplier);
             return ResponseEntity.ok(supplier);
         }).orElse(ResponseEntity.notFound().build());

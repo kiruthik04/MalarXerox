@@ -12,7 +12,7 @@ export default function SuppliersPage() {
   const [historyData, setHistoryData] = useState({ bills: [], payments: [] });
   
   const [supplierForm, setSupplierForm] = useState({ name: '', contact: '' });
-  const [editForm, setEditForm] = useState({ name: '', contact: '' });
+  const [editForm, setEditForm] = useState({ name: '', contact: '', balance: '' });
   const [billForm, setBillForm] = useState({ amount: '', description: '' });
   const [msg, setMsg] = useState('');
 
@@ -55,7 +55,7 @@ export default function SuppliersPage() {
   const updateSupplier = async (e) => {
     e.preventDefault();
     try {
-      await api.updateSupplier(showEditSupplier.id, editForm);
+      await api.updateSupplier(showEditSupplier.id, { ...editForm, balance: parseFloat(editForm.balance) });
       setMsg('✅ Supplier updated!');
       setShowEditSupplier(null);
       loadSuppliers();
@@ -114,7 +114,7 @@ export default function SuppliersPage() {
                     <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => loadHistory(s)}>
                       <History size={14} /> History
                     </button>
-                    <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => { setShowEditSupplier(s); setEditForm({ name: s.name, contact: s.contact || '' }); }}>
+                    <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => { setShowEditSupplier(s); setEditForm({ name: s.name, contact: s.contact || '', balance: s.balance || 0 }); }}>
                       <Edit size={14} /> Edit
                     </button>
                   </div>
@@ -158,6 +158,10 @@ export default function SuppliersPage() {
               <div className="form-group">
                 <label>Contact Details (Phone/Address)</label>
                 <input className="form-input" placeholder="e.g. 9876543210 / Sathy" value={editForm.contact} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Outstanding Balance (₹)</label>
+                <input className="form-input" type="number" step="0.01" placeholder="0.00" value={editForm.balance} onChange={e => setEditForm(f => ({ ...f, balance: e.target.value }))} required />
               </div>
               <button type="submit" className="btn-success" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>Update Supplier</button>
             </form>
