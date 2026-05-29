@@ -32,6 +32,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/api/services", "/api/ping", "/api/ping/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/users/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/suppliers").authenticated()
                 .requestMatchers("/api/suppliers/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/billing/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/billing/**").hasRole("ADMIN")
