@@ -859,7 +859,7 @@ const DashboardCatalog = () => {
 const DashboardExpenses = () => { 
   const { auth } = useContext(AuthContext); 
   if (!auth.token) return <LoginPage />;
-  return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} /></AdminLayout>; 
+  return <AdminLayout pageTitle="Expense Management"><ExpensesPage token={auth.token} role={auth.role} /></AdminLayout>; 
 };
 const DashboardDebts = () => { 
   const { auth } = useContext(AuthContext); 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Wallet, Edit2, Trash2, X } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function ExpensesPage() {
+export default function ExpensesPage({ role }) {
   const [expenses, setExpenses] = useState([]);
   const [form, setForm] = useState({ description: '', amount: '', category: 'Supplies' });
   const [msg, setMsg] = useState('');
@@ -157,7 +157,7 @@ export default function ExpensesPage() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
+              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th>{role !== 'EMPLOYEE' && <th style={{ textAlign: 'right' }}>Actions</th>}</tr>
             </thead>
             <tbody>
               {loading ? (
@@ -170,14 +170,16 @@ export default function ExpensesPage() {
                   <td><span className="badge badge-green" style={{ background: '#f3f4f6', color: '#374151' }}>{e.category}</span></td>
                   <td><strong>{e.description}</strong></td>
                   <td style={{ color: '#ef4444', fontWeight: 700 }}>₹{e.amount.toFixed(2)}</td>
-                  <td style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleEdit(e)}>
-                      <Edit2 size={14} /> Edit
-                    </button>
-                    <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleDelete(e.id)}>
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </td>
+                  {role !== 'EMPLOYEE' && (
+                    <td style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleEdit(e)}>
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleDelete(e.id)}>
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
