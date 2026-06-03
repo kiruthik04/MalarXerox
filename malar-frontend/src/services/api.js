@@ -109,6 +109,8 @@ export const api = {
   // Expenses
   getExpenses: () => fetchApi('/api/expenses'),
   addExpense: (data) => fetchApi('/api/expenses', { method: 'POST', body: JSON.stringify(data) }),
+  updateExpense: (id, data) => fetchApi(`/api/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteExpense: (id) => fetchApi(`/api/expenses/${id}`, { method: 'DELETE' }),
 
   // Debts
   getDebts: () => fetchApi('/api/debts'),

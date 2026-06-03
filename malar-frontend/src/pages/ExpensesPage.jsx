@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Wallet } from 'lucide-react';
+import { Plus, RefreshCw, Wallet, Edit2, Trash2, X } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function ExpensesPage() {
@@ -10,6 +10,7 @@ export default function ExpensesPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [isSupplierPayment, setIsSupplierPayment] = useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const categories = ['Supplies', 'Electricity', 'Rent', 'Internet', 'Salary', 'Maintenance', 'Other'];
 
@@ -27,18 +28,51 @@ export default function ExpensesPage() {
     e.preventDefault();
     if (!form.description || !form.amount) return;
     try {
-      await api.addExpense({
-        ...form, 
-        amount: parseFloat(form.amount),
-        supplier: isSupplierPayment ? { id: selectedSupplierId } : null
-      });
-      setMsg('✅ Expense recorded!');
+      if (editingId) {
+        await api.updateExpense(editingId, {
+          ...form,
+          amount: parseFloat(form.amount)
+        });
+        setMsg('✅ Expense updated!');
+        setEditingId(null);
+      } else {
+        await api.addExpense({
+          ...form, 
+          amount: parseFloat(form.amount),
+          supplier: isSupplierPayment ? { id: selectedSupplierId } : null
+        });
+        setMsg('✅ Expense recorded!');
+      }
       setForm({ description: '', amount: '', category: 'Supplies' });
       setIsSupplierPayment(false);
       setSelectedSupplierId('');
       load();
     } catch (err) {
-      setMsg(`❌ ${err.message || 'Failed to record.'}`);
+      setMsg(`❌ ${err.message || 'Failed to save.'}`);
+    }
+    setTimeout(() => setMsg(''), 3000);
+  };
+
+  const handleEdit = (expense) => {
+    setForm({ description: expense.description, amount: expense.amount, category: expense.category });
+    setEditingId(expense.id);
+    setIsSupplierPayment(false);
+    setSelectedSupplierId('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ description: '', amount: '', category: 'Supplies' });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this expense?')) return;
+    try {
+      await api.deleteExpense(id);
+      setMsg('✅ Expense deleted!');
+      load();
+    } catch (err) {
+      setMsg(`❌ ${err.message || 'Failed to delete.'}`);
     }
     setTimeout(() => setMsg(''), 3000);
   };
@@ -58,7 +92,7 @@ export default function ExpensesPage() {
       <div className="responsive-grid">
         <div>
           <div className="admin-card">
-            <h3><Plus size={18} /> New Expense</h3>
+            <h3>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Edit Expense' : 'New Expense'}</h3>
             <form onSubmit={save}>
               <div className="form-group">
                 <label>Description</label>
@@ -75,33 +109,40 @@ export default function ExpensesPage() {
                 </select>
               </div>
 
-              <div style={{ marginBottom: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', marginBottom: isSupplierPayment ? '0.75rem' : 0 }}>
-                  <input type="checkbox" style={{ width: '18px', height: '18px' }} checked={isSupplierPayment} onChange={e => setIsSupplierPayment(e.target.checked)} />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Is this a payment to a Supplier?</span>
-                </label>
-                
-                {isSupplierPayment && (
-                  <div style={{ animation: 'slideUpFade 0.3s ease-out' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Select Supplier</label>
-                    <select 
-                      className="form-select" 
-                      value={selectedSupplierId} 
-                      onChange={e => setSelectedSupplierId(e.target.value)}
-                      required={isSupplierPayment}
-                    >
-                      <option value="">-- Choose Supplier --</option>
-                      {suppliers.map(s => (
-                        <option key={s.id} value={s.id}>{s.name} (Bal: ₹{s.balance.toFixed(2)})</option>
-                      ))}
-                    </select>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--primary-dark)', marginTop: '0.5rem' }}>Balance will automatically decrease after saving.</p>
-                  </div>
+              {!editingId && (
+                <div style={{ marginBottom: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', marginBottom: isSupplierPayment ? '0.75rem' : 0 }}>
+                    <input type="checkbox" style={{ width: '18px', height: '18px' }} checked={isSupplierPayment} onChange={e => setIsSupplierPayment(e.target.checked)} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Is this a payment to a Supplier?</span>
+                  </label>
+                  
+                  {isSupplierPayment && (
+                    <div style={{ animation: 'slideUpFade 0.3s ease-out' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Select Supplier</label>
+                      <select 
+                        className="form-select" 
+                        value={selectedSupplierId} 
+                        onChange={e => setSelectedSupplierId(e.target.value)}
+                        required={isSupplierPayment}
+                      >
+                        <option value="">-- Choose Supplier --</option>
+                        {suppliers.map(s => (
+                          <option key={s.id} value={s.id}>{s.name} (Bal: ₹{s.balance.toFixed(2)})</option>
+                        ))}
+                      </select>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--primary-dark)', marginTop: '0.5rem' }}>Balance will automatically decrease after saving.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {editingId && (
+                  <button type="button" className="btn-outline" style={{ padding: '0.6rem 1.5rem' }} onClick={cancelEdit}>
+                    <X size={16} /> Cancel
+                  </button>
                 )}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                 <button type="submit" className="btn-success" style={{ padding: '0.6rem 1.5rem' }}>
-                  <Plus size={16} /> Save Expense
+                  {editingId ? 'Update Expense' : <><Plus size={16} /> Save Expense</>}
                 </button>
               </div>
             </form>
@@ -116,7 +157,7 @@ export default function ExpensesPage() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr>
+              <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -129,6 +170,14 @@ export default function ExpensesPage() {
                   <td><span className="badge badge-green" style={{ background: '#f3f4f6', color: '#374151' }}>{e.category}</span></td>
                   <td><strong>{e.description}</strong></td>
                   <td style={{ color: '#ef4444', fontWeight: 700 }}>₹{e.amount.toFixed(2)}</td>
+                  <td style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleEdit(e)}>
+                      <Edit2 size={14} /> Edit
+                    </button>
+                    <button className="btn-outline" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '0.2rem' }} onClick={() => handleDelete(e.id)}>
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
